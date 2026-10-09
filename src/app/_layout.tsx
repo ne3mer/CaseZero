@@ -35,6 +35,9 @@ export default function RootLayout() {
             animation: 'fade',
           }}>
           <Stack.Screen name="index" />
+          <Stack.Screen name="cases" />
+          <Stack.Screen name="briefing" />
+          <Stack.Screen name="investigation" />
         </Stack>
       </ThemeProvider>
     </SafeAreaProvider>

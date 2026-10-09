@@ -23,6 +23,15 @@ export const SAMPLE_CASE_001: Case = CaseSchema.parse({
     'Ferenc Kovács was found dead inside his workshop on Népszínház utca. The workshop safe was left ajar with rare timepieces missing.',
   briefing:
     'At 23:40, a local night patrol discovered the workshop security grille unlocked. Inside, Kovács lay beside his workbench. A single 9mm casing was recovered from the oak floorboards. Three individuals were in contact with the victim during the hours leading up to the murder.',
+  objective:
+    'Secure the crime scene on Népszínház utca, collect forensic and documentary ballistics, examine the victim’s associates, and establish the sequence of events.',
+  initialFacts: [
+    'Victim Ferenc Kovács (52) suffered a single fatal close-range 9mm gunshot wound.',
+    'A single spent brass cartridge was recovered on the floorboards near the workbench.',
+    'Workshop safe was left unlocked with high-value antique timepiece ledgers exposed.',
+    'Security grille was found unlocked at 23:40 CET without signs of forced exterior entry.',
+  ],
+  isLocked: false,
   evidence: [
     {
       id: 'ev_spent_shell_casing',

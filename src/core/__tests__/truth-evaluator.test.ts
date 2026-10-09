@@ -114,4 +114,32 @@ describe('Case Zero — Truth Evaluation Engine', () => {
     const parseResult = CaseSchema.safeParse(validCase);
     expect(parseResult.success).toBe(true);
   });
+
+  it('validates SAMPLE_CASE_001 against CaseSchema', async () => {
+    const { SAMPLE_CASE_001 } = await import('../data/sample-case');
+    const parseResult = CaseSchema.safeParse(SAMPLE_CASE_001);
+    expect(parseResult.success).toBe(true);
+    expect(SAMPLE_CASE_001.objective).toBeDefined();
+    expect(SAMPLE_CASE_001.initialFacts?.length).toBeGreaterThan(0);
+  });
+
+  it('provides case registry with CZ-001 unlocked and CZ-002 classified', async () => {
+    const { CASE_REGISTRY, getCaseById } = await import('../data/cases');
+    expect(CASE_REGISTRY.length).toBe(2);
+
+    const cz001 = CASE_REGISTRY.find((c) => c.caseNumber === 'CZ-001');
+    expect(cz001).toBeDefined();
+    expect(cz001?.isLocked).toBe(false);
+
+    const cz002 = CASE_REGISTRY.find((c) => c.caseNumber === 'CZ-002');
+    expect(cz002).toBeDefined();
+    expect(cz002?.isLocked).toBe(true);
+
+    const fetchedCase = getCaseById('case_001');
+    expect(fetchedCase).toBeDefined();
+    expect(fetchedCase?.id).toBe('case_001');
+
+    const unknownCase = getCaseById('non_existent');
+    expect(unknownCase).toBeUndefined();
+  });
 });
