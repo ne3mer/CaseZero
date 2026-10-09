@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import {
+  Image,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -12,6 +13,7 @@ import { DossierBadge } from '@/components/common/DossierBadge';
 import { NoirButton } from '@/components/common/NoirButton';
 import { NoirCard } from '@/components/common/NoirCard';
 import { NoirTopBar } from '@/components/common/NoirTopBar';
+import { SceneImages } from '@/constants/assets';
 import { MaxContentWidth, NoirColors, Radius, Spacing } from '@/constants/theme';
 import { CASE_REGISTRY, CaseListItem } from '@/core/data/cases';
 import { useGameStore } from '@/store/game-store';
@@ -36,6 +38,11 @@ export default function CaseSelectionScreen() {
     });
   };
 
+  const getSceneImage = (key: string) => {
+    if (key === 'lastAppointment') return SceneImages.lastAppointment;
+    return SceneImages.danubeEcho;
+  };
+
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
       {/* Top Bar Navigation */}
@@ -58,20 +65,16 @@ export default function CaseSelectionScreen() {
           <Text style={styles.screenSub}>
             SELECT AN INVESTIGATION DOSSIER TO BEGIN BRIEFING
           </Text>
-          <View style={styles.accentDivider}>
-            <View style={styles.accentBarGold} />
-            <View style={styles.accentBarMuted} />
-          </View>
         </View>
 
-        {/* Temporary Notice / Info Banner */}
+        {/* Temporary Notice Banner */}
         {lockedNotice && (
           <View style={styles.noticeBanner}>
             <Text style={styles.noticeText}>{lockedNotice}</Text>
           </View>
         )}
 
-        {/* Case Cards List */}
+        {/* Visual-First Case Cards List */}
         <View style={styles.caseList}>
           {CASE_REGISTRY.map((caseItem) => {
             const isCZ001 = caseItem.id === 'case_001';
@@ -91,10 +94,19 @@ export default function CaseSelectionScreen() {
                 <NoirCard
                   variant={caseItem.isLocked ? 'surface' : 'elevated'}
                   hasGoldAccent={!caseItem.isLocked}
-                  style={caseItem.isLocked ? styles.lockedCard : styles.unlockedCard}>
-                  {/* Card Top Row */}
-                  <View style={styles.cardTopRow}>
-                    <View style={styles.badgeGroup}>
+                  style={styles.caseCard}>
+                  {/* Visual Scene Artwork Banner */}
+                  <View style={styles.imageContainer}>
+                    <Image
+                      source={getSceneImage(caseItem.coverImageKey)}
+                      style={[
+                        styles.coverImage,
+                        caseItem.isLocked && styles.coverImageLocked,
+                      ]}
+                      resizeMode="cover"
+                    />
+                    <View style={styles.imageOverlay} />
+                    <View style={styles.imageBadges}>
                       <DossierBadge
                         label={caseItem.caseNumber}
                         variant={caseItem.isLocked ? 'neutral' : 'gold'}
@@ -104,63 +116,53 @@ export default function CaseSelectionScreen() {
                       ) : (
                         <DossierBadge label="ACTIVE" variant="emerald" />
                       )}
-                      {caseItem.id === 'case_002' && (
-                        <DossierBadge label="OFFICIAL FIRST CASE" variant="neutral" />
-                      )}
                     </View>
-                    <Text style={styles.cardStatusLabel}>
-                      {caseItem.isLocked ? 'SEALED' : 'OPEN'}
-                    </Text>
                   </View>
 
-                  {/* Title & Location */}
-                  <View style={styles.titleWrapper}>
-                    <Text
-                      style={[
-                        styles.caseTitle,
-                        caseItem.isLocked && styles.caseTitleLocked,
-                      ]}>
-                      {caseItem.title.toUpperCase()}
-                    </Text>
-                    <Text style={styles.caseDistrict}>{caseItem.district}</Text>
-                  </View>
-
-                  {/* Synopsis */}
-                  <Text style={styles.synopsisText}>{caseItem.synopsis}</Text>
-
-                  {/* Progress Indicator (For Unlocked Case) */}
-                  {!caseItem.isLocked ? (
-                    <View style={styles.progressSection}>
-                      <View style={styles.progressLabels}>
-                        <Text style={styles.progressLabel}>EVIDENCE DISCOVERED</Text>
-                        <Text style={styles.progressValue}>
-                          {evidenceCount} / {caseItem.totalEvidenceCount} LOGGED
-                        </Text>
-                      </View>
-                      <View style={styles.progressBarTrack}>
-                        <View
-                          style={[
-                            styles.progressBarFill,
-                            { width: `${Math.max(progressRatio * 100, 15)}%` },
-                          ]}
-                        />
-                      </View>
-                    </View>
-                  ) : (
-                    <View style={styles.lockedInfoBox}>
-                      <Text style={styles.lockedInfoText}>
-                        DOSSIER CZ-002 PENDING CLEARANCE FROM CENTRAL COMMAND
+                  {/* Card Content */}
+                  <View style={styles.cardContent}>
+                    <View style={styles.titleWrapper}>
+                      <Text
+                        style={[
+                          styles.caseTitle,
+                          caseItem.isLocked && styles.caseTitleLocked,
+                        ]}>
+                        {caseItem.title.toUpperCase()}
                       </Text>
+                      <Text style={styles.caseDistrict}>{caseItem.district}</Text>
                     </View>
-                  )}
 
-                  {/* Action Button */}
-                  <View style={styles.cardActionWrapper}>
+                    {/* Punchy 1-Sentence Visual Hook */}
+                    <Text style={styles.synopsisText}>
+                      {caseItem.microSynopsis}
+                    </Text>
+
+                    {/* Visual Progress Bar (For Unlocked Case) */}
+                    {!caseItem.isLocked && (
+                      <View style={styles.progressSection}>
+                        <View style={styles.progressLabels}>
+                          <Text style={styles.progressLabel}>EVIDENCE DISCOVERED</Text>
+                          <Text style={styles.progressValue}>
+                            {evidenceCount} / {caseItem.totalEvidenceCount} LOGGED
+                          </Text>
+                        </View>
+                        <View style={styles.progressBarTrack}>
+                          <View
+                            style={[
+                              styles.progressBarFill,
+                              { width: `${Math.max(progressRatio * 100, 15)}%` },
+                            ]}
+                          />
+                        </View>
+                      </View>
+                    )}
+
+                    {/* Action Button */}
                     <NoirButton
                       label={
                         caseItem.isLocked
-                          ? 'CLASSIFIED DOSSIER'
-                          : 'INSPECT DOSSIER BRIEFING'
+                          ? 'CLASSIFIED // LOCKED'
+                          : 'INSPECT DOSSIER'
                       }
                       variant={caseItem.isLocked ? 'ghost' : 'primary'}
                       disabled={caseItem.isLocked}
@@ -176,7 +178,7 @@ export default function CaseSelectionScreen() {
         {/* Registry Summary Footer */}
         <View style={styles.registryFooter}>
           <Text style={styles.registryFooterText}>
-            HUNGARIAN NATIONAL POLICE ARCHIVE // 1 CASE ACTIVE // 1 CLASSIFIED
+            HUNGARIAN NATIONAL POLICE ARCHIVE // 1 ACTIVE // 1 CLASSIFIED
           </Text>
         </View>
       </ScrollView>
@@ -223,23 +225,6 @@ const styles = StyleSheet.create({
     color: NoirColors.goldLight,
     letterSpacing: 1,
   },
-  accentDivider: {
-    flexDirection: 'row',
-    marginTop: Spacing.xs,
-    height: 2,
-    alignItems: 'center',
-    width: '100%',
-  },
-  accentBarGold: {
-    width: 44,
-    height: 2,
-    backgroundColor: NoirColors.goldPrimary,
-  },
-  accentBarMuted: {
-    flex: 1,
-    height: 1,
-    backgroundColor: NoirColors.borderStrong,
-  },
   noticeBanner: {
     backgroundColor: NoirColors.crimsonMuted,
     borderWidth: 1,
@@ -256,42 +241,47 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   caseList: {
-    gap: Spacing.md,
+    gap: Spacing.lg,
     width: '100%',
   },
   cardPressable: {
     width: '100%',
   },
   cardPressed: {
-    opacity: 0.85,
+    opacity: 0.88,
   },
-  unlockedCard: {
-    gap: Spacing.sm + 2,
+  caseCard: {
+    padding: 0,
+    overflow: 'hidden',
   },
-  lockedCard: {
-    gap: Spacing.sm + 2,
-    opacity: 0.75,
-    borderColor: NoirColors.borderSubtle,
-  },
-  cardTopRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+  imageContainer: {
     width: '100%',
+    height: 160,
+    position: 'relative',
+    backgroundColor: '#050608',
   },
-  badgeGroup: {
+  coverImage: {
+    width: '100%',
+    height: '100%',
+  },
+  coverImageLocked: {
+    opacity: 0.35,
+  },
+  imageOverlay: {
+    ...StyleSheet.absoluteFill,
+    backgroundColor: 'rgba(9, 11, 15, 0.35)',
+  },
+  imageBadges: {
+    position: 'absolute',
+    top: Spacing.sm,
+    left: Spacing.sm,
     flexDirection: 'row',
     gap: Spacing.xs,
-    flexWrap: 'wrap',
-    alignItems: 'center',
-    flex: 1,
   },
-  cardStatusLabel: {
-    fontSize: 10,
-    fontWeight: '800',
-    color: NoirColors.textMuted,
-    letterSpacing: 1,
-    marginLeft: Spacing.xs,
+  cardContent: {
+    padding: Spacing.md,
+    gap: Spacing.sm + 2,
+    width: '100%',
   },
   titleWrapper: {
     gap: 2,
@@ -315,7 +305,7 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
   },
   synopsisText: {
-    fontSize: 12,
+    fontSize: 13,
     lineHeight: 18,
     color: NoirColors.textSecondary,
     flexWrap: 'wrap',
@@ -352,23 +342,6 @@ const styles = StyleSheet.create({
     height: '100%',
     backgroundColor: NoirColors.goldPrimary,
     borderRadius: Radius.full,
-  },
-  lockedInfoBox: {
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
-    padding: Spacing.sm,
-    borderRadius: Radius.sm,
-    borderWidth: 1,
-    borderColor: NoirColors.borderSubtle,
-  },
-  lockedInfoText: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: NoirColors.textMuted,
-    letterSpacing: 0.5,
-  },
-  cardActionWrapper: {
-    marginTop: Spacing.xs,
-    width: '100%',
   },
   registryFooter: {
     alignItems: 'center',

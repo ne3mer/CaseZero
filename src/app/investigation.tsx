@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import {
-  Platform,
+  Image,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -11,8 +12,8 @@ import { useRouter } from 'expo-router';
 import { DossierBadge } from '@/components/common/DossierBadge';
 import { NoirButton } from '@/components/common/NoirButton';
 import { NoirCard } from '@/components/common/NoirCard';
-import { NoirHeader } from '@/components/common/NoirHeader';
 import { NoirTopBar } from '@/components/common/NoirTopBar';
+import { EvidenceImages, SceneImages } from '@/constants/assets';
 import { MaxContentWidth, NoirColors, Radius, Spacing } from '@/constants/theme';
 import { SAMPLE_CASE_001 } from '@/core/data/sample-case';
 import { useGameStore } from '@/store/game-store';
@@ -21,7 +22,9 @@ export default function InvestigationScreen() {
   const router = useRouter();
   const { isInitialized, initialize, unlockedEvidenceIds, unlockEvidence } =
     useGameStore();
-  const [isDossierExpanded, setIsDossierExpanded] = useState(false);
+  const [selectedEvidenceId, setSelectedEvidenceId] = useState<string | null>(
+    null
+  );
   const [actionFeedback, setActionFeedback] = useState<string | null>(null);
 
   useEffect(() => {
@@ -31,24 +34,22 @@ export default function InvestigationScreen() {
   const activeCase = SAMPLE_CASE_001;
 
   const handleExamineScene = () => {
-    const remainingEvidence = activeCase.evidence.filter(
+    const remaining = activeCase.evidence.filter(
       (e) => !unlockedEvidenceIds.includes(e.id)
     );
 
-    if (remainingEvidence.length > 0) {
-      const nextClue = remainingEvidence[0];
+    if (remaining.length > 0) {
+      const nextClue = remaining[0];
       unlockEvidence(nextClue.id);
-      setActionFeedback(`EVIDENCE RECOVERED: ${nextClue.title.toUpperCase()}`);
+      setSelectedEvidenceId(nextClue.id);
+      setActionFeedback(`CLUE RECOVERED: ${nextClue.title.toUpperCase()}`);
     } else {
-      setActionFeedback('ALL SCENE EVIDENCE CURRENTLY LOGGED IN DOSSIER');
+      setActionFeedback('ALL SCENE EVIDENCE LOGGED');
     }
-
-    setIsDossierExpanded(true);
   };
 
-  const handleToggleDossier = () => {
-    setIsDossierExpanded((prev) => !prev);
-    setActionFeedback(null);
+  const getEvidenceImage = (id: string) => {
+    return EvidenceImages[id] || EvidenceImages.ev_spent_shell_casing;
   };
 
   return (
@@ -67,171 +68,155 @@ export default function InvestigationScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
         bounces={true}>
-        {/* Cinematic Header */}
-        <NoirHeader
-          location={activeCase.district.toUpperCase()}
-          time={activeCase.timeReported}
-        />
-
-        {/* Detective Telemetry Status Banner (In-Universe) */}
-        <View style={styles.systemStatusBanner}>
-          <View style={styles.systemStatusItem}>
-            <Text style={styles.systemStatusLabel}>DOSSIER</Text>
-            <Text style={styles.systemStatusValue}>ACTIVE FILE</Text>
-          </View>
-          <View style={styles.systemStatusDivider} />
-          <View style={styles.systemStatusItem}>
-            <Text style={styles.systemStatusLabel}>SECTOR</Text>
-            <Text style={styles.systemStatusValue}>DISTRICT VIII</Text>
-          </View>
-          <View style={styles.systemStatusDivider} />
-          <View style={styles.systemStatusItem}>
-            <Text style={styles.systemStatusLabel}>PRIORITY</Text>
-            <Text style={styles.systemStatusValue}>CODE 1</Text>
-          </View>
-        </View>
-
-        {/* Active Case Dossier Card */}
-        <NoirCard variant="elevated" hasGoldAccent style={styles.dossierCard}>
-          <View style={styles.dossierHeader}>
-            <View style={styles.dossierBadgeRow}>
+        {/* Crime Scene Visual Snapshot Card */}
+        <NoirCard variant="elevated" hasGoldAccent style={styles.sceneCard}>
+          <View style={styles.sceneImageContainer}>
+            <Image
+              source={SceneImages.danubeEcho}
+              style={styles.sceneImage}
+              resizeMode="cover"
+            />
+            <View style={styles.sceneOverlay} />
+            <View style={styles.sceneBadges}>
               <DossierBadge label={activeCase.caseNumber} variant="gold" />
               <DossierBadge label="DISTRICT VIII" variant="neutral" />
-              <DossierBadge label="HOMICIDE" variant="crimson" />
-            </View>
-            <Text style={styles.caseTitle}>{activeCase.title.toUpperCase()}</Text>
-            <Text style={styles.caseLocation}>{activeCase.district}</Text>
-          </View>
-
-          {/* Victim Brief */}
-          <View style={styles.metaSection}>
-            <View style={styles.metaRow}>
-              <Text style={styles.metaLabel}>VICTIM</Text>
-              <Text style={styles.metaValue}>{activeCase.victim.name}</Text>
-            </View>
-            <View style={styles.metaRow}>
-              <Text style={styles.metaLabel}>OCCUPATION</Text>
-              <Text style={styles.metaValue}>{activeCase.victim.occupation}</Text>
-            </View>
-            <View style={styles.metaRow}>
-              <Text style={styles.metaLabel}>CAUSE OF DEATH</Text>
-              <Text style={styles.metaValueWarning}>
-                {activeCase.victim.causeOfDeath}
-              </Text>
             </View>
           </View>
 
-          {/* Synopsis */}
-          <View style={styles.synopsisContainer}>
-            <Text style={styles.synopsisLabel}>INCIDENT BRIEFING</Text>
-            <Text style={styles.synopsisText}>{activeCase.synopsis}</Text>
+          <View style={styles.sceneInfo}>
+            <View style={styles.sceneHeaderRow}>
+              <Text style={styles.sceneTitle}>{activeCase.title.toUpperCase()}</Text>
+              <Text style={styles.sceneTime}>{activeCase.timeReported}</Text>
+            </View>
+            <Text style={styles.scenePrompt}>
+              Népszínház Utca Atelier — Search the environment for physical ballistics and documentation.
+            </Text>
           </View>
 
-          {/* Evidence & Suspect Telemetry Counts */}
-          <View style={styles.telemetryCounters}>
-            <View style={styles.counterBox}>
-              <Text style={styles.counterNumber}>
-                {isInitialized ? unlockedEvidenceIds.length : 1} /{' '}
-                {activeCase.evidence.length}
-              </Text>
-              <Text style={styles.counterLabel}>EVIDENCE LOGGED</Text>
-            </View>
-            <View style={styles.counterBox}>
-              <Text style={styles.counterNumber}>{activeCase.suspects.length}</Text>
-              <Text style={styles.counterLabel}>SUSPECTS</Text>
-            </View>
-            <View style={styles.counterBox}>
-              <Text style={styles.counterNumber}>{activeCase.timeline.length}</Text>
-              <Text style={styles.counterLabel}>TIMELINE</Text>
-            </View>
-          </View>
-
-          {/* Interactive Evidence Dossier Details (Toggleable) */}
-          {isDossierExpanded && (
-            <View style={styles.expandedDossier}>
-              <Text style={styles.expandedTitle}>REGISTERED EVIDENCE FILES</Text>
-              {activeCase.evidence.map((item) => {
-                const isUnlocked = unlockedEvidenceIds.includes(item.id);
-                return (
-                  <View
-                    key={item.id}
-                    style={[
-                      styles.evidenceItem,
-                      isUnlocked ? styles.evidenceUnlocked : styles.evidenceLocked,
-                    ]}>
-                    <View style={styles.evidenceTopRow}>
-                      <Text
-                        numberOfLines={1}
-                        style={[
-                          styles.evidenceTitle,
-                          !isUnlocked && styles.evidenceTitleLocked,
-                        ]}>
-                        {isUnlocked ? item.title : '/// CLASSIFIED EVIDENCE ///'}
-                      </Text>
-                      <DossierBadge
-                        label={isUnlocked ? item.type : 'UNRECOVERED'}
-                        variant={isUnlocked ? 'cyan' : 'neutral'}
-                      />
-                    </View>
-                    {isUnlocked && (
-                      <>
-                        <Text style={styles.evidenceDescription}>
-                          {item.description}
-                        </Text>
-                        <Text style={styles.evidenceLocation}>
-                          LOCATION: {item.locationFound}
-                        </Text>
-                      </>
-                    )}
-                  </View>
-                );
-              })}
-            </View>
-          )}
-
-          {/* Action Feedback Prompt */}
-          {actionFeedback && (
-            <View style={styles.feedbackBanner}>
-              <Text style={styles.feedbackText}>{actionFeedback}</Text>
-            </View>
-          )}
-
-          {/* Interactive Action Controls */}
-          <View style={styles.actionsContainer}>
+          {/* Quick Scene Action Button */}
+          <View style={styles.sceneActionWrapper}>
             <NoirButton
-              label={
-                isDossierExpanded
-                  ? 'HIDE DOSSIER FILES'
-                  : 'INSPECT CASE DOSSIER'
-              }
+              label="EXAMINE ENVIRONMENT"
               variant="primary"
-              onPress={handleToggleDossier}
-            />
-            <NoirButton
-              label="SCAN CRIME SCENE"
-              variant="secondary"
               onPress={handleExamineScene}
             />
           </View>
         </NoirCard>
 
-        {/* Narrative Detective Investigation Directive */}
-        <NoirCard variant="surface" style={styles.directiveCard}>
-          <Text style={styles.directiveCardTitle}>
-            INVESTIGATION DIRECTIVE // BKR
-          </Text>
-          <Text style={styles.directiveCardBody}>
-            All formal accusations require corroborating physical proof. Suspect
-            interrogations, ballistic findings, and reconstructed timelines must
-            establish guilt beyond doubt. Inconclusive deductions will be rejected by
-            the Budapest Prosecutor&apos;s Office.
-          </Text>
-          <View style={styles.directiveCardFooter}>
-            <Text style={styles.directiveCardNotice}>
-              BUDAPEST METROPOLITAN POLICE — DISTRICT VIII PRECINCT
-            </Text>
+        {/* Action Feedback Prompt */}
+        {actionFeedback && (
+          <View style={styles.feedbackBanner}>
+            <Text style={styles.feedbackText}>{actionFeedback}</Text>
           </View>
-        </NoirCard>
+        )}
+
+        {/* Visual Telemetry Clue Counters */}
+        <View style={styles.countersRow}>
+          <View style={styles.counterBox}>
+            <Text style={styles.counterNumber}>
+              {isInitialized ? unlockedEvidenceIds.length : 1} /{' '}
+              {activeCase.evidence.length}
+            </Text>
+            <Text style={styles.counterLabel}>EVIDENCE</Text>
+          </View>
+          <View style={styles.counterBox}>
+            <Text style={styles.counterNumber}>{activeCase.suspects.length}</Text>
+            <Text style={styles.counterLabel}>SUSPECTS</Text>
+          </View>
+          <View style={styles.counterBox}>
+            <Text style={styles.counterNumber}>{activeCase.timeline.length}</Text>
+            <Text style={styles.counterLabel}>TIMELINE</Text>
+          </View>
+        </View>
+
+        {/* Visual-First Evidence Cards List */}
+        <View style={styles.evidenceSection}>
+          <Text style={styles.sectionHeader}>RECOVERED EVIDENCE</Text>
+
+          <View style={styles.evidenceList}>
+            {activeCase.evidence.map((item) => {
+              const isUnlocked = unlockedEvidenceIds.includes(item.id);
+              const isSelected = selectedEvidenceId === item.id;
+
+              return (
+                <Pressable
+                  key={item.id}
+                  disabled={!isUnlocked}
+                  onPress={() =>
+                    setSelectedEvidenceId((prev) =>
+                      prev === item.id ? null : item.id
+                    )
+                  }
+                  style={({ pressed }) => [
+                    styles.evidenceCardPressable,
+                    pressed && styles.evidenceCardPressed,
+                  ]}>
+                  <NoirCard
+                    variant={isUnlocked ? 'elevated' : 'surface'}
+                    hasGoldAccent={isSelected}
+                    style={isUnlocked ? styles.evidenceCardUnlocked : styles.evidenceCardLocked}>
+                    <View style={styles.evidenceRow}>
+                      {/* Visual Thumbnail */}
+                      <View style={styles.thumbnailContainer}>
+                        {isUnlocked ? (
+                          <Image
+                            source={getEvidenceImage(item.id)}
+                            style={styles.thumbnail}
+                            resizeMode="cover"
+                          />
+                        ) : (
+                          <View style={styles.thumbnailLocked}>
+                            <Text style={styles.lockIcon}>?</Text>
+                          </View>
+                        )}
+                      </View>
+
+                      {/* Evidence Metadata (Title + 1-Sentence Observation) */}
+                      <View style={styles.evidenceTextGroup}>
+                        <View style={styles.evidenceTopRow}>
+                          <Text
+                            numberOfLines={1}
+                            style={[
+                              styles.evidenceTitle,
+                              !isUnlocked && styles.evidenceTitleLocked,
+                            ]}>
+                            {isUnlocked ? item.title : 'UNDISCOVERED CLUE'}
+                          </Text>
+                          <DossierBadge
+                            label={isUnlocked ? item.type : 'LOCKED'}
+                            variant={isUnlocked ? 'cyan' : 'neutral'}
+                          />
+                        </View>
+
+                        {/* One Short Description Line (Show, Don't Tell) */}
+                        <Text
+                          numberOfLines={isSelected ? undefined : 2}
+                          style={styles.evidenceObservation}>
+                          {isUnlocked
+                            ? item.shortObservation || item.description
+                            : 'Examine the crime scene to uncover this material proof.'}
+                        </Text>
+                      </View>
+                    </View>
+
+                    {/* Progressive Disclosure: Expanded Location and Forensics */}
+                    {isUnlocked && isSelected && (
+                      <View style={styles.disclosureSection}>
+                        <View style={styles.disclosureDivider} />
+                        <Text style={styles.disclosureLocation}>
+                          FOUND: {item.locationFound.toUpperCase()}
+                        </Text>
+                        <Text style={styles.disclosureFullDesc}>
+                          {item.description}
+                        </Text>
+                      </View>
+                    )}
+                  </NoirCard>
+                </Pressable>
+              );
+            })}
+          </View>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -256,131 +241,86 @@ const styles = StyleSheet.create({
     maxWidth: MaxContentWidth,
     alignSelf: 'center',
     paddingHorizontal: Spacing.md,
-    paddingTop: Spacing.sm,
+    paddingTop: Spacing.md,
     paddingBottom: Spacing.xxxl,
     gap: Spacing.md,
   },
-  systemStatusBanner: {
+  sceneCard: {
+    padding: 0,
+    overflow: 'hidden',
+  },
+  sceneImageContainer: {
     width: '100%',
+    height: 160,
+    position: 'relative',
+    backgroundColor: '#050608',
+  },
+  sceneImage: {
+    width: '100%',
+    height: '100%',
+  },
+  sceneOverlay: {
+    ...StyleSheet.absoluteFill,
+    backgroundColor: 'rgba(9, 11, 15, 0.25)',
+  },
+  sceneBadges: {
+    position: 'absolute',
+    top: Spacing.sm,
+    left: Spacing.sm,
     flexDirection: 'row',
-    alignItems: 'center',
+    gap: Spacing.xs,
+  },
+  sceneInfo: {
+    padding: Spacing.md,
+    gap: 4,
+    width: '100%',
+  },
+  sceneHeaderRow: {
+    flexDirection: 'row',
     justifyContent: 'space-between',
-    backgroundColor: NoirColors.surface,
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: Spacing.sm,
-    borderRadius: Radius.sm,
-    borderWidth: 1,
-    borderColor: NoirColors.borderSubtle,
-  },
-  systemStatusItem: {
-    flex: 1,
     alignItems: 'center',
-    minWidth: 0,
-  },
-  systemStatusDivider: {
-    width: 1,
-    height: 18,
-    backgroundColor: NoirColors.borderStrong,
-  },
-  systemStatusLabel: {
-    fontSize: 9,
-    fontWeight: '700',
-    color: NoirColors.textMuted,
-    letterSpacing: 0.8,
-  },
-  systemStatusValue: {
-    fontSize: 11,
-    fontWeight: '800',
-    color: NoirColors.goldLight,
-    letterSpacing: 0.4,
-    marginTop: 2,
-    textAlign: 'center',
-  },
-  dossierCard: {
-    gap: Spacing.md,
-  },
-  dossierHeader: {
-    gap: Spacing.xs,
     width: '100%',
   },
-  dossierBadgeRow: {
-    flexDirection: 'row',
-    gap: Spacing.xs,
-    flexWrap: 'wrap',
-    width: '100%',
-  },
-  caseTitle: {
-    fontSize: 22,
+  sceneTitle: {
+    fontSize: 18,
     fontWeight: '900',
     color: NoirColors.textPrimary,
-    letterSpacing: 1.2,
-    marginTop: 2,
-    flexWrap: 'wrap',
-  },
-  caseLocation: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: NoirColors.goldPrimary,
-    letterSpacing: 0.6,
-    flexWrap: 'wrap',
-  },
-  metaSection: {
-    backgroundColor: 'rgba(0,0,0,0.3)',
-    borderRadius: Radius.sm,
-    padding: Spacing.md,
-    gap: Spacing.xs + 2,
-    borderWidth: 1,
-    borderColor: NoirColors.borderSubtle,
-    width: '100%',
-  },
-  metaRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    gap: Spacing.sm,
-    width: '100%',
-  },
-  metaLabel: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: NoirColors.textMuted,
-    letterSpacing: 0.8,
-    flexShrink: 0,
-    marginTop: 1,
-  },
-  metaValue: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: NoirColors.textPrimary,
-    flex: 1,
-    textAlign: 'right',
-    flexWrap: 'wrap',
-  },
-  metaValueWarning: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: NoirColors.crimson,
-    flex: 1,
-    textAlign: 'right',
-    flexWrap: 'wrap',
-  },
-  synopsisContainer: {
-    gap: 3,
-    width: '100%',
-  },
-  synopsisLabel: {
-    fontSize: 10,
-    fontWeight: '800',
-    color: NoirColors.goldLight,
     letterSpacing: 1,
   },
-  synopsisText: {
-    fontSize: 13,
-    lineHeight: 19,
+  sceneTime: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: NoirColors.goldLight,
+  },
+  scenePrompt: {
+    fontSize: 12,
+    lineHeight: 17,
     color: NoirColors.textSecondary,
     flexWrap: 'wrap',
   },
-  telemetryCounters: {
+  sceneActionWrapper: {
+    paddingHorizontal: Spacing.md,
+    paddingBottom: Spacing.md,
+    width: '100%',
+  },
+  feedbackBanner: {
+    backgroundColor: NoirColors.goldMuted,
+    borderWidth: 1,
+    borderColor: NoirColors.goldBorder,
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.md,
+    borderRadius: Radius.sm,
+    alignItems: 'center',
+    width: '100%',
+  },
+  feedbackText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: NoirColors.goldLight,
+    letterSpacing: 0.8,
+    textAlign: 'center',
+  },
+  countersRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     gap: Spacing.xs,
@@ -389,8 +329,8 @@ const styles = StyleSheet.create({
   counterBox: {
     flex: 1,
     minWidth: 0,
-    backgroundColor: 'rgba(0,0,0,0.35)',
-    paddingVertical: Spacing.sm + 2,
+    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+    paddingVertical: Spacing.sm,
     paddingHorizontal: 2,
     borderRadius: Radius.sm,
     alignItems: 'center',
@@ -406,40 +346,72 @@ const styles = StyleSheet.create({
     fontSize: 9,
     fontWeight: '700',
     color: NoirColors.textMuted,
-    marginTop: 4,
-    letterSpacing: 0.3,
+    marginTop: 2,
+    letterSpacing: 0.4,
     textAlign: 'center',
   },
-  expandedDossier: {
-    backgroundColor: 'rgba(0,0,0,0.35)',
-    padding: Spacing.md,
-    borderRadius: Radius.md,
-    borderWidth: 1,
-    borderColor: NoirColors.goldBorder,
-    gap: Spacing.sm + 2,
+  evidenceSection: {
+    gap: Spacing.sm,
     width: '100%',
   },
-  expandedTitle: {
+  sectionHeader: {
     fontSize: 11,
     fontWeight: '800',
     color: NoirColors.goldLight,
     letterSpacing: 1,
   },
-  evidenceItem: {
-    padding: Spacing.sm,
-    borderRadius: Radius.sm,
-    borderWidth: 1,
-    gap: 4,
+  evidenceList: {
+    gap: Spacing.sm + 2,
     width: '100%',
   },
-  evidenceUnlocked: {
-    backgroundColor: NoirColors.surfaceHighlight,
-    borderColor: NoirColors.borderStrong,
+  evidenceCardPressable: {
+    width: '100%',
   },
-  evidenceLocked: {
-    backgroundColor: 'rgba(255, 255, 255, 0.02)',
-    borderColor: NoirColors.borderSubtle,
-    opacity: 0.6,
+  evidenceCardPressed: {
+    opacity: 0.85,
+  },
+  evidenceCardUnlocked: {
+    gap: Spacing.xs,
+  },
+  evidenceCardLocked: {
+    gap: Spacing.xs,
+    opacity: 0.5,
+  },
+  evidenceRow: {
+    flexDirection: 'row',
+    gap: Spacing.md,
+    alignItems: 'center',
+    width: '100%',
+  },
+  thumbnailContainer: {
+    width: 60,
+    height: 60,
+    borderRadius: Radius.sm,
+    overflow: 'hidden',
+    backgroundColor: '#050608',
+    borderWidth: 1,
+    borderColor: NoirColors.borderStrong,
+    flexShrink: 0,
+  },
+  thumbnail: {
+    width: '100%',
+    height: '100%',
+  },
+  thumbnailLocked: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+  },
+  lockIcon: {
+    fontSize: 20,
+    fontWeight: '900',
+    color: NoirColors.textMuted,
+  },
+  evidenceTextGroup: {
+    flex: 1,
+    gap: 3,
+    minWidth: 0,
   },
   evidenceTopRow: {
     flexDirection: 'row',
@@ -449,73 +421,40 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   evidenceTitle: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '700',
     color: NoirColors.textPrimary,
     flex: 1,
-    marginRight: Spacing.xs,
   },
   evidenceTitleLocked: {
     color: NoirColors.textMuted,
-    fontFamily: Platform.select({ ios: 'Courier', default: 'monospace' }),
   },
-  evidenceDescription: {
+  evidenceObservation: {
     fontSize: 11,
     lineHeight: 16,
     color: NoirColors.textSecondary,
-    marginTop: 2,
     flexWrap: 'wrap',
   },
-  evidenceLocation: {
+  disclosureSection: {
+    marginTop: Spacing.xs,
+    gap: 4,
+    width: '100%',
+  },
+  disclosureDivider: {
+    height: 1,
+    backgroundColor: NoirColors.borderSubtle,
+    marginVertical: 4,
+  },
+  disclosureLocation: {
     fontSize: 9,
-    fontWeight: '700',
-    color: NoirColors.goldLight,
-    letterSpacing: 0.4,
-    flexWrap: 'wrap',
-  },
-  feedbackBanner: {
-    backgroundColor: NoirColors.goldMuted,
-    borderColor: NoirColors.goldBorder,
-    borderWidth: 1,
-    padding: Spacing.sm,
-    borderRadius: Radius.sm,
-    alignItems: 'center',
-    width: '100%',
-  },
-  feedbackText: {
-    fontSize: 10,
     fontWeight: '800',
     color: NoirColors.goldLight,
-    letterSpacing: 0.8,
-    textAlign: 'center',
+    letterSpacing: 0.5,
   },
-  actionsContainer: {
-    gap: Spacing.sm,
-    width: '100%',
-  },
-  directiveCard: {
-    gap: Spacing.xs + 2,
-    borderColor: NoirColors.borderSubtle,
-  },
-  directiveCardTitle: {
+  disclosureFullDesc: {
     fontSize: 11,
-    fontWeight: '800',
-    color: NoirColors.goldLight,
-    letterSpacing: 1.2,
-  },
-  directiveCardBody: {
-    fontSize: 12,
-    lineHeight: 18,
+    lineHeight: 16,
     color: NoirColors.textSecondary,
     flexWrap: 'wrap',
-  },
-  directiveCardFooter: {
-    marginTop: Spacing.xs,
-  },
-  directiveCardNotice: {
-    fontSize: 9,
-    fontWeight: '700',
-    color: NoirColors.textMuted,
-    letterSpacing: 0.8,
   },
 });

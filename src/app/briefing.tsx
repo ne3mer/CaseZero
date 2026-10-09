@@ -1,5 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
+  Image,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -11,7 +13,8 @@ import { DossierBadge } from '@/components/common/DossierBadge';
 import { NoirButton } from '@/components/common/NoirButton';
 import { NoirCard } from '@/components/common/NoirCard';
 import { NoirTopBar } from '@/components/common/NoirTopBar';
-import { MaxContentWidth, NoirColors, Spacing } from '@/constants/theme';
+import { SceneImages } from '@/constants/assets';
+import { MaxContentWidth, NoirColors, Radius, Spacing } from '@/constants/theme';
 import { getCaseById } from '@/core/data/cases';
 import { SAMPLE_CASE_001 } from '@/core/data/sample-case';
 import { useGameStore } from '@/store/game-store';
@@ -20,6 +23,7 @@ export default function CaseBriefingScreen() {
   const router = useRouter();
   const { caseId } = useLocalSearchParams<{ caseId: string }>();
   const { setActiveCase } = useGameStore();
+  const [showFullDossier, setShowFullDossier] = useState(false);
 
   const caseData = (caseId ? getCaseById(caseId) : null) || SAMPLE_CASE_001;
 
@@ -28,12 +32,13 @@ export default function CaseBriefingScreen() {
     router.push('/investigation');
   };
 
-  const initialFacts = caseData.initialFacts || [
-    `Victim ${caseData.victim.name} (${caseData.victim.age}) sustained fatal trauma.`,
-    `Cause of Death: ${caseData.victim.causeOfDeath}.`,
-    `Crime Scene: Workshop atelier, safe left unlocked.`,
-    `Time of Incident: Reported at ${caseData.timeReported}.`,
-  ];
+  const microBriefing =
+    caseData.microBriefing ||
+    'Ferenc Kovács lies dead beside his workbench on Népszínház utca, killed by a close-range 9mm shot. The wall safe is forced open with rare chronometers missing.';
+
+  const objective =
+    caseData.objective ||
+    'Inspect the crime scene, secure physical ballistics, and uncover the motive.';
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
@@ -51,77 +56,91 @@ export default function CaseBriefingScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
         bounces={true}>
-        {/* Dossier Header */}
-        <View style={styles.headerSection}>
-          <View style={styles.badgeRow}>
-            <DossierBadge label={caseData.caseNumber} variant="gold" />
-            <DossierBadge label="DISTRICT VIII" variant="neutral" />
-            <DossierBadge label="DOSSIER BRIEFING" variant="cyan" />
+        {/* Crime Scene Hero Card (Visual-First) */}
+        <NoirCard variant="elevated" hasGoldAccent style={styles.heroCard}>
+          <View style={styles.imageWrapper}>
+            <Image
+              source={SceneImages.danubeEcho}
+              style={styles.sceneImage}
+              resizeMode="cover"
+            />
+            <View style={styles.imageOverlay} />
+            <View style={styles.imageHeaderBadges}>
+              <DossierBadge label={caseData.caseNumber} variant="gold" />
+              <DossierBadge label="DISTRICT VIII" variant="neutral" />
+              <DossierBadge label="HOMICIDE" variant="crimson" />
+            </View>
           </View>
-          <Text style={styles.caseTitle}>{caseData.title.toUpperCase()}</Text>
-          <Text style={styles.caseLocation}>{caseData.district}</Text>
-          <View style={styles.accentDivider}>
-            <View style={styles.accentBarGold} />
-            <View style={styles.accentBarMuted} />
+
+          {/* Incident Headline */}
+          <View style={styles.headlineSection}>
+            <Text style={styles.caseTitle}>{caseData.title.toUpperCase()}</Text>
+            <Text style={styles.caseLocation}>{caseData.district}</Text>
+
+            {/* 2-Sentence Micro-Briefing (Under 30 Seconds Comprehension) */}
+            <Text style={styles.microBriefingText}>{microBriefing}</Text>
+          </View>
+        </NoirCard>
+
+        {/* Visual Crime Scene Clue Pills */}
+        <View style={styles.cluePillsRow}>
+          <View style={styles.cluePill}>
+            <Text style={styles.cluePillLabel}>VICTIM</Text>
+            <Text style={styles.cluePillValue}>Ferenc Kovács (52)</Text>
+          </View>
+          <View style={styles.cluePill}>
+            <Text style={styles.cluePillLabel}>WOUND</Text>
+            <Text style={styles.cluePillValue}>9mm Close-Range</Text>
+          </View>
+          <View style={styles.cluePill}>
+            <Text style={styles.cluePillLabel}>SCENE</Text>
+            <Text style={styles.cluePillValue}>Safe Looted</Text>
           </View>
         </View>
 
-        {/* Incident Summary Card */}
-        <NoirCard variant="elevated" hasGoldAccent style={styles.sectionCard}>
-          <View style={styles.cardHeaderRow}>
-            <Text style={styles.sectionTitle}>INCIDENT BRIEFING</Text>
-            <DossierBadge label="REPORT" variant="gold" />
+        {/* Objective Strip */}
+        <NoirCard variant="surface" style={styles.objectiveCard}>
+          <View style={styles.objectiveHeader}>
+            <DossierBadge label="MISSION OBJECTIVE" variant="emerald" />
+            <Text style={styles.objectiveTime}>{caseData.timeReported}</Text>
           </View>
-          <Text style={styles.bodyText}>{caseData.briefing}</Text>
+          <Text style={styles.objectiveText}>{objective}</Text>
         </NoirCard>
 
-        {/* Mission Objective Card */}
-        <NoirCard variant="surface" style={styles.sectionCard}>
-          <View style={styles.cardHeaderRow}>
-            <Text style={styles.sectionTitle}>MISSION OBJECTIVE</Text>
-            <DossierBadge label="MANDATE" variant="emerald" />
-          </View>
-          <Text style={styles.bodyText}>
-            {caseData.objective ||
-              'Secure all material evidence at the scene, cross-examine persons of interest, and reconstruct the timeline of events leading up to the incident.'}
+        {/* Progressive Disclosure: Optional Forensic Archive */}
+        <Pressable
+          onPress={() => setShowFullDossier((prev) => !prev)}
+          style={({ pressed }) => [
+            styles.toggleDossierBtn,
+            pressed && styles.toggleDossierBtnPressed,
+          ]}>
+          <Text style={styles.toggleDossierText}>
+            {showFullDossier ? '▲ HIDE ARCHIVAL NOTES' : '▼ OPTIONAL FORENSIC DOSSIER'}
           </Text>
-        </NoirCard>
+        </Pressable>
 
-        {/* Known Initial Facts Card */}
-        <NoirCard variant="surface" style={styles.sectionCard}>
-          <View style={styles.cardHeaderRow}>
-            <Text style={styles.sectionTitle}>KNOWN INITIAL FACTS</Text>
-            <DossierBadge label="VERIFIED" variant="neutral" />
-          </View>
-          <View style={styles.factsList}>
-            {initialFacts.map((fact, index) => (
-              <View key={index} style={styles.factRow}>
-                <View style={styles.factBullet} />
-                <Text style={styles.factText}>{fact}</Text>
-              </View>
-            ))}
-          </View>
-        </NoirCard>
+        {showFullDossier && (
+          <NoirCard variant="surface" style={styles.archivalCard}>
+            <Text style={styles.archivalTitle}>PATROL DISPATCH REPORT</Text>
+            <Text style={styles.archivalBody}>{caseData.briefing}</Text>
+            <View style={styles.archivalFacts}>
+              {caseData.initialFacts?.map((fact, idx) => (
+                <View key={idx} style={styles.archivalFactRow}>
+                  <View style={styles.archivalBullet} />
+                  <Text style={styles.archivalFactText}>{fact}</Text>
+                </View>
+              ))}
+            </View>
+          </NoirCard>
+        )}
 
-        {/* Action Controls */}
+        {/* Call to Action Controls */}
         <View style={styles.actionSection}>
           <NoirButton
-            label="BEGIN INVESTIGATION"
+            label="ENTER CRIME SCENE"
             variant="primary"
             onPress={handleBeginInvestigation}
           />
-          <NoirButton
-            label="RETURN TO CASE FILES"
-            variant="secondary"
-            onPress={() => router.back()}
-          />
-        </View>
-
-        {/* Footer */}
-        <View style={styles.footerContainer}>
-          <Text style={styles.footerText}>
-            BUDAPEST METROPOLITAN POLICE — CID FORENSIC UNIT
-          </Text>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -149,112 +168,165 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.md,
     paddingTop: Spacing.md,
     paddingBottom: Spacing.xxxl,
-    gap: Spacing.lg,
+    gap: Spacing.md,
   },
-  headerSection: {
-    gap: Spacing.xs,
+  heroCard: {
+    padding: 0,
+    overflow: 'hidden',
+  },
+  imageWrapper: {
     width: '100%',
+    height: 190,
+    position: 'relative',
+    backgroundColor: '#050608',
   },
-  badgeRow: {
+  sceneImage: {
+    width: '100%',
+    height: '100%',
+  },
+  imageOverlay: {
+    ...StyleSheet.absoluteFill,
+    backgroundColor: 'rgba(9, 11, 15, 0.25)',
+  },
+  imageHeaderBadges: {
+    position: 'absolute',
+    top: Spacing.sm,
+    left: Spacing.sm,
     flexDirection: 'row',
     gap: Spacing.xs,
-    flexWrap: 'wrap',
+  },
+  headlineSection: {
+    padding: Spacing.md,
+    gap: Spacing.xs + 2,
+    width: '100%',
   },
   caseTitle: {
-    fontSize: 26,
+    fontSize: 24,
     fontWeight: '900',
     color: NoirColors.textPrimary,
     letterSpacing: 1.5,
-    marginTop: 2,
     flexWrap: 'wrap',
   },
   caseLocation: {
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: 11,
+    fontWeight: '700',
     color: NoirColors.goldPrimary,
     letterSpacing: 0.6,
     flexWrap: 'wrap',
   },
-  accentDivider: {
+  microBriefingText: {
+    fontSize: 13,
+    lineHeight: 19,
+    color: NoirColors.textSecondary,
+    marginTop: 4,
+    flexWrap: 'wrap',
+  },
+  cluePillsRow: {
     flexDirection: 'row',
-    marginTop: Spacing.xs,
-    height: 2,
-    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: Spacing.xs,
     width: '100%',
   },
-  accentBarGold: {
-    width: 44,
-    height: 2,
-    backgroundColor: NoirColors.goldPrimary,
-  },
-  accentBarMuted: {
+  cluePill: {
     flex: 1,
-    height: 1,
-    backgroundColor: NoirColors.borderStrong,
+    minWidth: 0,
+    backgroundColor: 'rgba(255, 255, 255, 0.04)',
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: 6,
+    borderRadius: Radius.sm,
+    borderWidth: 1,
+    borderColor: NoirColors.borderSubtle,
+    alignItems: 'center',
   },
-  sectionCard: {
-    gap: Spacing.sm + 2,
+  cluePillLabel: {
+    fontSize: 8,
+    fontWeight: '800',
+    color: NoirColors.textMuted,
+    letterSpacing: 0.8,
   },
-  cardHeaderRow: {
+  cluePillValue: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: NoirColors.goldLight,
+    marginTop: 2,
+    textAlign: 'center',
+  },
+  objectiveCard: {
+    gap: Spacing.xs + 2,
+  },
+  objectiveHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    width: '100%',
   },
-  sectionTitle: {
-    fontSize: 12,
-    fontWeight: '800',
-    color: NoirColors.goldLight,
-    letterSpacing: 1.2,
+  objectiveTime: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: NoirColors.textMuted,
+    letterSpacing: 0.5,
   },
-  bodyText: {
-    fontSize: 13,
-    lineHeight: 20,
-    color: NoirColors.textSecondary,
-    flexWrap: 'wrap',
-  },
-  factsList: {
-    gap: Spacing.sm,
-    width: '100%',
-  },
-  factRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: Spacing.sm,
-    width: '100%',
-  },
-  factBullet: {
-    width: 6,
-    height: 6,
-    borderRadius: 1,
-    backgroundColor: NoirColors.goldPrimary,
-    marginTop: 7,
-    flexShrink: 0,
-  },
-  factText: {
+  objectiveText: {
     fontSize: 12,
     lineHeight: 18,
     color: NoirColors.textPrimary,
+    fontWeight: '600',
+    flexWrap: 'wrap',
+  },
+  toggleDossierBtn: {
+    alignSelf: 'center',
+    paddingVertical: Spacing.xs,
+    paddingHorizontal: Spacing.md,
+  },
+  toggleDossierBtnPressed: {
+    opacity: 0.6,
+  },
+  toggleDossierText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: NoirColors.textMuted,
+    letterSpacing: 1,
+  },
+  archivalCard: {
+    gap: Spacing.sm,
+  },
+  archivalTitle: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: NoirColors.goldLight,
+    letterSpacing: 1,
+  },
+  archivalBody: {
+    fontSize: 12,
+    lineHeight: 18,
+    color: NoirColors.textSecondary,
+    flexWrap: 'wrap',
+  },
+  archivalFacts: {
+    gap: Spacing.xs + 2,
+    marginTop: Spacing.xs,
+  },
+  archivalFactRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: Spacing.xs + 2,
+  },
+  archivalBullet: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: NoirColors.goldPrimary,
+    marginTop: 6,
+    flexShrink: 0,
+  },
+  archivalFactText: {
+    fontSize: 11,
+    lineHeight: 16,
+    color: NoirColors.textMuted,
     flex: 1,
     flexWrap: 'wrap',
   },
   actionSection: {
-    gap: Spacing.sm,
     width: '100%',
     paddingTop: Spacing.xs,
-  },
-  footerContainer: {
-    alignItems: 'center',
-    paddingVertical: Spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: NoirColors.borderSubtle,
-    width: '100%',
-  },
-  footerText: {
-    fontSize: 9,
-    fontWeight: '700',
-    color: NoirColors.textMuted,
-    letterSpacing: 0.8,
-    textAlign: 'center',
   },
 });

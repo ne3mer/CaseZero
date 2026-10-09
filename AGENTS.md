@@ -41,6 +41,32 @@ Players investigate crime scenes, collect evidence, interrogate suspects, connec
 
 ---
 
+## 2. Visual-First Experience Principles
+
+CASE ZERO is a **visual-first detective game**, NOT a text-heavy interactive novel.
+
+1. **Show, Don't Tell**:
+   Communicate facts, scene atmosphere, and clues through imagery, environmental layout, and visual cues rather than dense expository paragraphs.
+2. **Target Experience Ratio**:
+   - ~40% Visual Investigation
+   - ~30% Deduction & Logical Puzzles
+   - ~20% Interactive Interrogation
+   - ~10% Reading Documents & Narrative
+3. **30-Second Mystery Comprehension**:
+   The player must grasp the core crime and stakes within 30 seconds without reading a wall of text.
+4. **Micro-Briefings (2–3 Sentences Max)**:
+   Case briefings are capped at 2 to 3 punchy, evocative sentences. No mandatory opening walls of text.
+5. **Visual Evidence Cards**:
+   Evidence cards must present a high-contrast illustration/asset, title, and a single concise 1-sentence observation.
+6. **Progressive Disclosure**:
+   Keep primary screens uncluttered. Deep forensic readouts, witness quotes, and fine details must be revealed only on-demand through player inspection.
+7. **Brevity in Interrogations**:
+   Suspect dialog exchanges must be concise, punchy, and voiceable, not novelistic monologue blocks.
+8. **Depth Maintained**:
+   Reducing text must never dumb down logical deduction. Evidence contradictions and timeline inconsistencies remain genuinely rigorous and solvable.
+
+---
+
 ## 2. Directory Structure
 
 ```

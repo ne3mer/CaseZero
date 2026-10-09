@@ -7,6 +7,8 @@ export interface CaseListItem {
   title: string;
   district: string;
   synopsis: string;
+  microSynopsis: string;
+  coverImageKey: string;
   status: 'open' | 'in_progress' | 'solved' | 'classified';
   isLocked: boolean;
   lockReason?: string;
@@ -23,6 +25,9 @@ export const CASE_REGISTRY: CaseListItem[] = [
     title: SAMPLE_CASE_001.title,
     district: SAMPLE_CASE_001.district,
     synopsis: SAMPLE_CASE_001.synopsis,
+    microSynopsis:
+      'Master watchmaker shot inside locked atelier; wall safe ransacked.',
+    coverImageKey: 'danubeEcho',
     status: 'open',
     isLocked: false,
     totalEvidenceCount: SAMPLE_CASE_001.evidence.length,
@@ -34,6 +39,9 @@ export const CASE_REGISTRY: CaseListItem[] = [
     district: 'District V (Belváros), Budapest',
     synopsis:
       'A high-profile psychiatrist is found dead inside his private practice on Váci utca. Client records shredded, no signs of forced entry.',
+    microSynopsis:
+      'Psychiatrist found dead in his private office; client archives shredded.',
+    coverImageKey: 'lastAppointment',
     status: 'classified',
     isLocked: true,
     lockReason: 'Dossier classified by Central Command pending forensic clearance.',
@@ -41,12 +49,8 @@ export const CASE_REGISTRY: CaseListItem[] = [
   },
 ];
 
-/**
- * Case Data Store Map
- */
 const CASE_DATA_MAP: Record<string, Case> = {
   [SAMPLE_CASE_001.id]: SAMPLE_CASE_001,
-  // Note: CZ-002 "The Last Appointment" will be introduced in its designated milestone
 };
 
 export function getCaseById(id: string): Case | undefined {

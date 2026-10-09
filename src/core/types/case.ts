@@ -20,9 +20,11 @@ export const EvidenceSchema = z.record(z.string(), z.any()).and(
     id: z.string().min(1),
     title: z.string().min(1),
     description: z.string().min(1),
+    shortObservation: z.string().optional(),
     type: EvidenceTypeSchema,
     locationFound: z.string().min(1),
     isKeyEvidence: z.boolean().default(false),
+    imageKey: z.string().optional(),
   })
 );
 export type Evidence = z.infer<typeof EvidenceSchema>;
@@ -115,9 +117,11 @@ export const CaseSchema = z.object({
   victim: VictimSchema,
   synopsis: z.string().min(1),
   briefing: z.string().min(1),
+  microBriefing: z.string().optional(), // 2-3 short punchy sentences max
   objective: z.string().optional(),
   initialFacts: z.array(z.string()).optional(),
   isLocked: z.boolean().default(false),
+  coverImageKey: z.string().optional(),
   evidence: z.array(EvidenceSchema),
   suspects: z.array(SuspectSchema),
   timeline: z.array(TimelineEventSchema),

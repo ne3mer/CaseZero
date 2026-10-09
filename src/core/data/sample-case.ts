@@ -23,42 +23,54 @@ export const SAMPLE_CASE_001: Case = CaseSchema.parse({
     'Ferenc Kovács was found dead inside his workshop on Népszínház utca. The workshop safe was left ajar with rare timepieces missing.',
   briefing:
     'At 23:40, a local night patrol discovered the workshop security grille unlocked. Inside, Kovács lay beside his workbench. A single 9mm casing was recovered from the oak floorboards. Three individuals were in contact with the victim during the hours leading up to the murder.',
+  microBriefing:
+    'Ferenc Kovács lies dead beside his workbench on Népszínház utca, killed by a close-range 9mm shot. The wall safe is forced open with rare chronometers missing.',
   objective:
-    'Secure the crime scene on Népszínház utca, collect forensic and documentary ballistics, examine the victim’s associates, and establish the sequence of events.',
+    'Inspect the crime scene, secure physical ballistics, and uncover the motive.',
   initialFacts: [
-    'Victim Ferenc Kovács (52) suffered a single fatal close-range 9mm gunshot wound.',
-    'A single spent brass cartridge was recovered on the floorboards near the workbench.',
-    'Workshop safe was left unlocked with high-value antique timepiece ledgers exposed.',
-    'Security grille was found unlocked at 23:40 CET without signs of forced exterior entry.',
+    'Victim Ferenc Kovács (52) suffered a close-range 9mm gunshot wound.',
+    'A single spent brass cartridge was found on the floorboards.',
+    'Workshop safe was forced open with serial ledgers exposed.',
+    'Security grille was unlocked at 23:40 CET without signs of forced exterior entry.',
   ],
   isLocked: false,
+  coverImageKey: 'danubeEcho',
   evidence: [
     {
       id: 'ev_spent_shell_casing',
       title: '9mm Discharged Casing',
       description:
         'A brass shell casing with firing-pin impressions matching vintage Hungarian service pistols.',
+      shortObservation:
+        '9mm brass casing with firing-pin marks matching vintage service pistols.',
       type: 'physical',
       locationFound: 'Workshop Floorboards, near Workbench',
       isKeyEvidence: true,
+      imageKey: 'ev_spent_shell_casing',
     },
     {
       id: 'ev_pocket_watch_log',
       title: 'Encrypted Ledger',
       description:
         'Ledger recording black-market watch serial numbers and undisclosed cash transactions.',
+      shortObservation:
+        'Clandestine serial numbers and black-market transaction tallies.',
       type: 'document',
       locationFound: 'Ajar Wall Safe',
       isKeyEvidence: true,
+      imageKey: 'ev_pocket_watch_log',
     },
     {
       id: 'ev_tram_ticket',
       title: 'Tram Line 4/6 Ticket',
       description:
         'Validated transit ticket stamped at Rákóczi tér station at 22:58.',
+      shortObservation:
+        'Transit stub validated at Rákóczi tér station at 22:58.',
       type: 'physical',
       locationFound: "Victim's Coat Pocket",
       isKeyEvidence: false,
+      imageKey: 'ev_tram_ticket',
     },
   ],
   suspects: [
