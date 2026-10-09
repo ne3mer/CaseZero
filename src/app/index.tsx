@@ -13,7 +13,7 @@ import { DossierBadge } from '@/components/common/DossierBadge';
 import { NoirButton } from '@/components/common/NoirButton';
 import { NoirCard } from '@/components/common/NoirCard';
 import { MaxContentWidth, NoirColors, Radius, Spacing } from '@/constants/theme';
-import { SAMPLE_CASE_001 } from '@/core/data/sample-case';
+import { SAMPLE_DEV_CASE } from '@/core/data/sample-case';
 import { CaseStorage, GameSettings } from '@/storage/case-storage';
 import { useGameStore } from '@/store/game-store';
 
@@ -34,6 +34,7 @@ export default function MainMenuScreen() {
     CaseStorage.getSettings().then(setSettings);
   }, [initialize]);
 
+  const activeCase = SAMPLE_DEV_CASE;
   const hasProgress = isInitialized && unlockedEvidenceIds.length > 0;
 
   const handleUpdateSetting = async (key: keyof GameSettings, value: any) => {
@@ -43,7 +44,7 @@ export default function MainMenuScreen() {
   };
 
   const handleResetProgress = async () => {
-    await resetActiveCaseProgress('CZ-001');
+    await resetActiveCaseProgress(activeCase.id);
     setResetConfirmMsg('PROGRESS RESET TO CRIME SCENE INITIAL STATE');
     setTimeout(() => setResetConfirmMsg(null), 3000);
   };
@@ -105,16 +106,16 @@ export default function MainMenuScreen() {
             <View style={styles.progressHeader}>
               <DossierBadge label="ACTIVE INVESTIGATION" variant="gold" />
               <Text style={styles.progressCaseNum}>
-                {SAMPLE_CASE_001.caseNumber}
+                {activeCase.caseNumber}
               </Text>
             </View>
             <Text style={styles.progressCaseTitle}>
-              {SAMPLE_CASE_001.title.toUpperCase()}
+              {activeCase.title.toUpperCase()}
             </Text>
             <View style={styles.progressStatsRow}>
               <Text style={styles.progressStatsLabel}>EVIDENCE LOGGED</Text>
               <Text style={styles.progressStatsValue}>
-                {unlockedEvidenceIds.length} OF {SAMPLE_CASE_001.evidence.length} SECURED
+                {unlockedEvidenceIds.length} OF {activeCase.evidence.length} SECURED
               </Text>
             </View>
           </NoirCard>

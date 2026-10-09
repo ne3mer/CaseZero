@@ -1,14 +1,15 @@
 import { Case, CaseSchema } from '../types/case';
 
 /**
- * Structured Case File: CZ-001
- * Budapest, District VIII (Józsefváros)
+ * Temporary Development Content: The Danube Echo
+ * Case Number: CZ-DEV-001 / ID: case_dev_danube
  *
- * All cases are data-driven records validated with Zod.
+ * Used as the functional testbed for game mechanics, evidence recovery,
+ * and deterministic truth evaluation during development milestones.
  */
-export const SAMPLE_CASE_001: Case = CaseSchema.parse({
-  id: 'case_001',
-  caseNumber: 'CZ-001',
+export const SAMPLE_DEV_CASE: Case = CaseSchema.parse({
+  id: 'case_dev_danube',
+  caseNumber: 'CZ-DEV-001',
   title: 'The Danube Echo',
   district: 'District VIII (Józsefváros), Budapest',
   timeReported: '23:40 CET',
@@ -34,7 +35,7 @@ export const SAMPLE_CASE_001: Case = CaseSchema.parse({
     'Security grille was unlocked at 23:40 CET without signs of forced exterior entry.',
   ],
   isLocked: false,
-  coverImageKey: 'danubeEcho',
+  coverImageKey: 'watchmakerAtelier',
   evidence: [
     {
       id: 'ev_spent_shell_casing',
@@ -135,3 +136,8 @@ export const SAMPLE_CASE_001: Case = CaseSchema.parse({
     conclusiveEvidenceIds: ['ev_spent_shell_casing', 'ev_pocket_watch_log'],
   },
 });
+
+/**
+ * Backward compatibility alias for existing test runners
+ */
+export const SAMPLE_CASE_001 = SAMPLE_DEV_CASE;

@@ -15,8 +15,8 @@ import { NoirCard } from '@/components/common/NoirCard';
 import { NoirTopBar } from '@/components/common/NoirTopBar';
 import { SceneImages } from '@/constants/assets';
 import { MaxContentWidth, NoirColors, Radius, Spacing } from '@/constants/theme';
-import { getCaseById } from '@/core/data/cases';
-import { SAMPLE_CASE_001 } from '@/core/data/sample-case';
+import { getCaseById, getCaseMetadata } from '@/core/data/cases';
+import { SAMPLE_DEV_CASE } from '@/core/data/sample-case';
 import { useGameStore } from '@/store/game-store';
 
 export default function CaseBriefingScreen() {
@@ -25,12 +25,106 @@ export default function CaseBriefingScreen() {
   const { setActiveCase } = useGameStore();
   const [showFullDossier, setShowFullDossier] = useState(false);
 
-  const caseData = (caseId ? getCaseById(caseId) : null) || SAMPLE_CASE_001;
+  const meta = caseId ? getCaseMetadata(caseId) : undefined;
+  const isLocked = meta?.isLocked ?? false;
+  const caseData = (caseId ? getCaseById(caseId) : null) || SAMPLE_DEV_CASE;
 
   const handleBeginInvestigation = async () => {
-    await setActiveCase(caseData.caseNumber);
+    await setActiveCase(caseData.id);
     router.push('/investigation');
   };
+
+  const getSceneImage = (key?: string) => {
+    if (key === 'watchmakerAtelier') return SceneImages.watchmakerAtelier;
+    if (key === 'danubeEcho') return SceneImages.danubeEcho;
+    return SceneImages.watchmakerAtelier;
+  };
+
+  if (isLocked && meta) {
+    return (
+      <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
+        <View style={styles.topBarWrapper}>
+          <NoirTopBar
+            onBack={() => router.back()}
+            backLabel="CASE FILES"
+            rightBadge={meta.caseNumber}
+          />
+        </View>
+
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          bounces={true}>
+          {/* Classified Hero Card */}
+          <NoirCard variant="surface" style={styles.heroCard}>
+            <View style={styles.imageWrapper}>
+              <Image
+                source={getSceneImage(meta.coverImageKey)}
+                style={[styles.sceneImage, { opacity: 0.4 }]}
+                resizeMode="cover"
+              />
+              <View style={styles.imageOverlay} />
+              <View style={styles.imageHeaderBadges}>
+                <DossierBadge label={meta.caseNumber} variant="neutral" />
+                <DossierBadge label="BUDAPEST" variant="neutral" />
+                <DossierBadge label="CLASSIFIED" variant="crimson" />
+              </View>
+            </View>
+
+            <View style={styles.headlineSection}>
+              <Text style={styles.caseTitle}>{meta.title.toUpperCase()}</Text>
+              <Text style={styles.caseLocation}>{meta.district}</Text>
+              <Text style={styles.microBriefingText}>{meta.synopsis}</Text>
+            </View>
+          </NoirCard>
+
+          {/* Persons of Interest */}
+          {meta.knownCharacters && meta.knownCharacters.length > 0 && (
+            <NoirCard variant="surface" style={styles.objectiveCard}>
+              <View style={styles.objectiveHeader}>
+                <DossierBadge label="KNOWN PERSONS OF INTEREST" variant="gold" />
+              </View>
+              <View style={styles.charactersGrid}>
+                {meta.knownCharacters.map((char) => (
+                  <View key={char.name} style={styles.characterChip}>
+                    <Text style={styles.characterName}>{char.name}</Text>
+                    <Text style={styles.characterSeparator}>—</Text>
+                    <Text style={styles.characterRole}>{char.role}</Text>
+                  </View>
+                ))}
+              </View>
+            </NoirCard>
+          )}
+
+          {/* Classified Lockout Notice */}
+          <View style={styles.lockedNoticeBox}>
+            <Text style={styles.lockedNoticeTitle}>
+              OFFICIAL CASE 1 // PRE-INVESTIGATION
+            </Text>
+            <Text style={styles.lockedNoticeDesc}>
+              {meta.lockReason ||
+                'Full truth model, culprit, motive, and timeline are pending final authorization. Case is non-playable.'}
+            </Text>
+          </View>
+
+          <View style={styles.actionSection}>
+            <NoirButton
+              label="DOSSIER CLASSIFIED // LOCKED"
+              variant="ghost"
+              disabled={true}
+              onPress={() => {}}
+            />
+            <NoirButton
+              label="RETURN TO CASE ARCHIVE"
+              variant="secondary"
+              onPress={() => router.back()}
+            />
+          </View>
+        </ScrollView>
+      </SafeAreaView>
+    );
+  }
 
   const microBriefing =
     caseData.microBriefing ||
@@ -60,7 +154,7 @@ export default function CaseBriefingScreen() {
         <NoirCard variant="elevated" hasGoldAccent style={styles.heroCard}>
           <View style={styles.imageWrapper}>
             <Image
-              source={SceneImages.danubeEcho}
+              source={getSceneImage(caseData.coverImageKey)}
               style={styles.sceneImage}
               resizeMode="cover"
             />
@@ -328,5 +422,59 @@ const styles = StyleSheet.create({
   actionSection: {
     width: '100%',
     paddingTop: Spacing.xs,
+    gap: Spacing.sm,
+  },
+  charactersGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    width: '100%',
+    marginTop: Spacing.xs,
+  },
+  characterChip: {
+    backgroundColor: 'rgba(255, 255, 255, 0.04)',
+    borderWidth: 1,
+    borderColor: NoirColors.borderSubtle,
+    borderRadius: Radius.xs,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  characterName: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: NoirColors.textPrimary,
+  },
+  characterSeparator: {
+    fontSize: 10,
+    color: NoirColors.textMuted,
+  },
+  characterRole: {
+    fontSize: 10,
+    fontWeight: '500',
+    color: NoirColors.goldLight,
+  },
+  lockedNoticeBox: {
+    backgroundColor: NoirColors.crimsonMuted,
+    borderWidth: 1,
+    borderColor: NoirColors.crimsonBorder,
+    padding: Spacing.md,
+    borderRadius: Radius.sm,
+    gap: Spacing.xs,
+    width: '100%',
+  },
+  lockedNoticeTitle: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#FFA4A4',
+    letterSpacing: 0.8,
+  },
+  lockedNoticeDesc: {
+    fontSize: 12,
+    lineHeight: 17,
+    color: NoirColors.textSecondary,
+    flexWrap: 'wrap',
   },
 });

@@ -4,8 +4,9 @@
  */
 
 export const SceneImages = {
+  // Watchmaker Workshop Atelier (Associated with The Last Appointment and dev testbed)
+  watchmakerAtelier: require('../../assets/images/scenes/danube_echo_crime_scene.jpg'),
   danubeEcho: require('../../assets/images/scenes/danube_echo_crime_scene.jpg'),
-  lastAppointment: require('../../assets/images/scenes/last_appointment_scene.jpg'),
 } as const;
 
 export const EvidenceImages: Record<string, any> = {

@@ -16,18 +16,27 @@ interface GameState {
 }
 
 export const useGameStore = create<GameState>((set, get) => ({
-  activeCaseId: 'CZ-001',
+  activeCaseId: 'case_dev_danube',
   unlockedEvidenceIds: ['ev_spent_shell_casing'],
   solvedCaseIds: [],
   isInitialized: false,
 
   initialize: async () => {
+    // Perform safe migration of legacy dev keys
+    await CaseStorage.migrateLegacyProgress();
+
     const [storedCaseId, solvedCases] = await Promise.all([
       CaseStorage.getActiveCaseId(),
       CaseStorage.getSolvedCases(),
     ]);
 
-    const activeCaseId = storedCaseId || 'CZ-001';
+    // If stored ID was legacy CZ-001 or case_001, redirect to case_dev_danube
+    let activeCaseId = storedCaseId || 'case_dev_danube';
+    if (activeCaseId === 'CZ-001' || activeCaseId === 'case_001') {
+      activeCaseId = 'case_dev_danube';
+      await CaseStorage.setActiveCaseId(activeCaseId);
+    }
+
     const unlockedEvidence = await CaseStorage.getUnlockedEvidence(activeCaseId);
 
     set({
@@ -44,7 +53,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     const unlocked = await CaseStorage.getUnlockedEvidence(caseId);
     set({
       activeCaseId: caseId,
-      unlockedEvidenceIds: unlocked,
+      unlockedEvidenceIds: unlocked.length > 0 ? unlocked : ['ev_spent_shell_casing'],
     });
   },
 
@@ -67,7 +76,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   },
 
   resetActiveCaseProgress: async (caseId: string) => {
-    await CaseStorage.saveUnlockedEvidence(caseId, []);
-    set({ unlockedEvidenceIds: [] });
+    await CaseStorage.saveUnlockedEvidence(caseId, ['ev_spent_shell_casing']);
+    set({ unlockedEvidenceIds: ['ev_spent_shell_casing'] });
   },
 }));

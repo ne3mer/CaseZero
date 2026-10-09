@@ -15,12 +15,13 @@ import { NoirCard } from '@/components/common/NoirCard';
 import { NoirTopBar } from '@/components/common/NoirTopBar';
 import { EvidenceImages, SceneImages } from '@/constants/assets';
 import { MaxContentWidth, NoirColors, Radius, Spacing } from '@/constants/theme';
-import { SAMPLE_CASE_001 } from '@/core/data/sample-case';
+import { getCaseById } from '@/core/data/cases';
+import { SAMPLE_DEV_CASE } from '@/core/data/sample-case';
 import { useGameStore } from '@/store/game-store';
 
 export default function InvestigationScreen() {
   const router = useRouter();
-  const { isInitialized, initialize, unlockedEvidenceIds, unlockEvidence } =
+  const { isInitialized, initialize, unlockedEvidenceIds, unlockEvidence, activeCaseId } =
     useGameStore();
   const [selectedEvidenceId, setSelectedEvidenceId] = useState<string | null>(
     null
@@ -31,7 +32,7 @@ export default function InvestigationScreen() {
     initialize();
   }, [initialize]);
 
-  const activeCase = SAMPLE_CASE_001;
+  const activeCase = (activeCaseId ? getCaseById(activeCaseId) : null) || SAMPLE_DEV_CASE;
 
   const handleExamineScene = () => {
     const remaining = activeCase.evidence.filter(
@@ -50,6 +51,12 @@ export default function InvestigationScreen() {
 
   const getEvidenceImage = (id: string) => {
     return EvidenceImages[id] || EvidenceImages.ev_spent_shell_casing;
+  };
+
+  const getSceneImage = (key?: string) => {
+    if (key === 'watchmakerAtelier') return SceneImages.watchmakerAtelier;
+    if (key === 'danubeEcho') return SceneImages.danubeEcho;
+    return SceneImages.watchmakerAtelier;
   };
 
   return (
@@ -72,7 +79,7 @@ export default function InvestigationScreen() {
         <NoirCard variant="elevated" hasGoldAccent style={styles.sceneCard}>
           <View style={styles.sceneImageContainer}>
             <Image
-              source={SceneImages.danubeEcho}
+              source={getSceneImage(activeCase.coverImageKey)}
               style={styles.sceneImage}
               resizeMode="cover"
             />

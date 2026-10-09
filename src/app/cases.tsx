@@ -39,8 +39,9 @@ export default function CaseSelectionScreen() {
   };
 
   const getSceneImage = (key: string) => {
-    if (key === 'lastAppointment') return SceneImages.lastAppointment;
-    return SceneImages.danubeEcho;
+    if (key === 'watchmakerAtelier') return SceneImages.watchmakerAtelier;
+    if (key === 'danubeEcho') return SceneImages.danubeEcho;
+    return SceneImages.watchmakerAtelier;
   };
 
   return (
@@ -77,11 +78,12 @@ export default function CaseSelectionScreen() {
         {/* Visual-First Case Cards List */}
         <View style={styles.caseList}>
           {CASE_REGISTRY.map((caseItem) => {
-            const isCZ001 = caseItem.id === 'case_001';
-            const evidenceCount = isCZ001 ? unlockedEvidenceIds.length : 0;
-            const progressRatio = isCZ001
-              ? evidenceCount / caseItem.totalEvidenceCount
-              : 0;
+            const isUnlocked = !caseItem.isLocked;
+            const evidenceCount = isUnlocked ? unlockedEvidenceIds.length : 0;
+            const progressRatio =
+              isUnlocked && caseItem.totalEvidenceCount > 0
+                ? evidenceCount / caseItem.totalEvidenceCount
+                : 0;
 
             return (
               <Pressable
@@ -137,8 +139,24 @@ export default function CaseSelectionScreen() {
                       {caseItem.microSynopsis}
                     </Text>
 
+                    {/* Known Characters Section for Official Case */}
+                    {caseItem.knownCharacters && caseItem.knownCharacters.length > 0 && (
+                      <View style={styles.charactersSection}>
+                        <Text style={styles.charactersLabel}>PERSONS OF INTEREST</Text>
+                        <View style={styles.charactersGrid}>
+                          {caseItem.knownCharacters.map((char) => (
+                            <View key={char.name} style={styles.characterChip}>
+                              <Text style={styles.characterName}>{char.name}</Text>
+                              <Text style={styles.characterSeparator}>—</Text>
+                              <Text style={styles.characterRole}>{char.role}</Text>
+                            </View>
+                          ))}
+                        </View>
+                      </View>
+                    )}
+
                     {/* Visual Progress Bar (For Unlocked Case) */}
-                    {!caseItem.isLocked && (
+                    {isUnlocked && (
                       <View style={styles.progressSection}>
                         <View style={styles.progressLabels}>
                           <Text style={styles.progressLabel}>EVIDENCE DISCOVERED</Text>
@@ -309,6 +327,48 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     color: NoirColors.textSecondary,
     flexWrap: 'wrap',
+  },
+  charactersSection: {
+    gap: 4,
+    width: '100%',
+    paddingTop: 2,
+  },
+  charactersLabel: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: NoirColors.goldLight,
+    letterSpacing: 0.8,
+  },
+  charactersGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    width: '100%',
+  },
+  characterChip: {
+    backgroundColor: 'rgba(255, 255, 255, 0.04)',
+    borderWidth: 1,
+    borderColor: NoirColors.borderSubtle,
+    borderRadius: Radius.xs,
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  characterName: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: NoirColors.textPrimary,
+  },
+  characterSeparator: {
+    fontSize: 9,
+    color: NoirColors.textMuted,
+  },
+  characterRole: {
+    fontSize: 9,
+    fontWeight: '500',
+    color: NoirColors.goldLight,
   },
   progressSection: {
     gap: 4,

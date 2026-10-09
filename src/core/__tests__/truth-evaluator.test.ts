@@ -115,31 +115,88 @@ describe('Case Zero — Truth Evaluation Engine', () => {
     expect(parseResult.success).toBe(true);
   });
 
-  it('validates SAMPLE_CASE_001 against CaseSchema', async () => {
-    const { SAMPLE_CASE_001 } = await import('../data/sample-case');
-    const parseResult = CaseSchema.safeParse(SAMPLE_CASE_001);
+  it('validates SAMPLE_DEV_CASE against CaseSchema', async () => {
+    const { SAMPLE_DEV_CASE } = await import('../data/sample-case');
+    const parseResult = CaseSchema.safeParse(SAMPLE_DEV_CASE);
     expect(parseResult.success).toBe(true);
-    expect(SAMPLE_CASE_001.objective).toBeDefined();
-    expect(SAMPLE_CASE_001.initialFacts?.length).toBeGreaterThan(0);
+    expect(SAMPLE_DEV_CASE.id).toBe('case_dev_danube');
+    expect(SAMPLE_DEV_CASE.caseNumber).toBe('CZ-DEV-001');
+    expect(SAMPLE_DEV_CASE.title).toBe('The Danube Echo');
+    expect(SAMPLE_DEV_CASE.isLocked).toBe(false);
+    expect(SAMPLE_DEV_CASE.objective).toBeDefined();
+    expect(SAMPLE_DEV_CASE.initialFacts?.length).toBeGreaterThan(0);
   });
 
-  it('provides case registry with CZ-001 unlocked and CZ-002 classified', async () => {
-    const { CASE_REGISTRY, getCaseById } = await import('../data/cases');
-    expect(CASE_REGISTRY.length).toBe(2);
+  describe('Official First Case Regression: The Last Appointment (CZ-001)', () => {
+    it('establishes CZ-001: The Last Appointment as official first case with exact premise', async () => {
+      const { CASE_REGISTRY, getCaseById, getCaseMetadata } = await import('../data/cases');
 
-    const cz001 = CASE_REGISTRY.find((c) => c.caseNumber === 'CZ-001');
-    expect(cz001).toBeDefined();
-    expect(cz001?.isLocked).toBe(false);
+      const cz001 = CASE_REGISTRY.find((c) => c.caseNumber === 'CZ-001');
+      expect(cz001).toBeDefined();
+      expect(cz001?.title).toBe('The Last Appointment');
+      expect(cz001?.district).toBe('Budapest, Hungary');
+      expect(cz001?.isOfficialCase).toBe(true);
+      expect(cz001?.status).toBe('classified');
+      expect(cz001?.isLocked).toBe(true);
 
-    const cz002 = CASE_REGISTRY.find((c) => c.caseNumber === 'CZ-002');
-    expect(cz002).toBeDefined();
-    expect(cz002?.isLocked).toBe(true);
+      // Premise verification
+      expect(cz001?.synopsis).toContain('Ádám Varga');
+      expect(cz001?.synopsis).toContain('watchmaker');
+      expect(cz001?.synopsis).toContain('locked from the inside');
+      expect(cz001?.synopsis).toContain('pocket watch');
 
-    const fetchedCase = getCaseById('case_001');
-    expect(fetchedCase).toBeDefined();
-    expect(fetchedCase?.id).toBe('case_001');
+      // Artwork mapping: must be associated with watchmaker workshop
+      expect(cz001?.coverImageKey).toBe('watchmakerAtelier');
 
-    const unknownCase = getCaseById('non_existent');
-    expect(unknownCase).toBeUndefined();
+      // Known characters verification
+      const expectedCharacters = [
+        { name: 'Márton Fekete', role: 'Business Partner' },
+        { name: 'Eszter Kovács', role: 'Former Apprentice' },
+        { name: 'László Horváth', role: 'Collector' },
+        { name: 'Bence Nagy', role: 'Courier' },
+      ];
+      expect(cz001?.knownCharacters).toEqual(expectedCharacters);
+
+      // Metadata lookup
+      const meta = getCaseMetadata('CZ-001');
+      expect(meta).toBeDefined();
+      expect(meta?.title).toBe('The Last Appointment');
+
+      // Crucial constraint: Official case remains locked & non-playable until complete logical design is approved
+      // No synthetic truth model or fake culprit is invented
+      expect(getCaseById('case_001')).toBeUndefined();
+      expect(getCaseById('CZ-001')).toBeUndefined();
+    });
+
+    it('maintains CZ-DEV-001: The Danube Echo as separate playable dev content', async () => {
+      const { CASE_REGISTRY, getCaseById, getCaseMetadata } = await import('../data/cases');
+
+      const devCase = CASE_REGISTRY.find((c) => c.caseNumber === 'CZ-DEV-001');
+      expect(devCase).toBeDefined();
+      expect(devCase?.id).toBe('case_dev_danube');
+      expect(devCase?.title).toBe('The Danube Echo');
+      expect(devCase?.isLocked).toBe(false);
+      expect(devCase?.status).toBe('open');
+      expect(devCase?.isOfficialCase).toBe(false);
+
+      const meta = getCaseMetadata('case_dev_danube');
+      expect(meta).toBeDefined();
+      expect(meta?.caseNumber).toBe('CZ-DEV-001');
+
+      // Dev sandbox is playable via getCaseById
+      const loadedDevCase = getCaseById('case_dev_danube');
+      expect(loadedDevCase).toBeDefined();
+      expect(loadedDevCase?.title).toBe('The Danube Echo');
+      expect(loadedDevCase?.truth).toBeDefined();
+    });
+
+    it('confirms no psychiatrist office descriptions exist in case registry', async () => {
+      const { CASE_REGISTRY } = await import('../data/cases');
+      const allText = JSON.stringify(CASE_REGISTRY).toLowerCase();
+      expect(allText).not.toContain('psychiatrist');
+      expect(allText).not.toContain('balint');
+      expect(allText).not.toContain('somogyi');
+      expect(allText).not.toContain('therapy');
+    });
   });
 });

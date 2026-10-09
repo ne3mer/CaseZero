@@ -24,6 +24,37 @@ const DEFAULT_SETTINGS: GameSettings = {
  * Offline-first persistence adapter using AsyncStorage
  */
 export const CaseStorage = {
+  /**
+   * Safe migration of legacy development case identifiers.
+   * If a player accumulated saved progress on "The Danube Echo" under the old
+   * 'CZ-001' key, copies that evidence to 'case_dev_danube' without data loss.
+   */
+  async migrateLegacyProgress(): Promise<void> {
+    try {
+      const activeId = await AsyncStorage.getItem(STORAGE_KEYS.ACTIVE_CASE_ID);
+      if (activeId === 'CZ-001' || activeId === 'case_001') {
+        await AsyncStorage.setItem(STORAGE_KEYS.ACTIVE_CASE_ID, 'case_dev_danube');
+      }
+
+      const legacyEvidence =
+        (await AsyncStorage.getItem(`${STORAGE_KEYS.UNLOCKED_EVIDENCE_PREFIX}CZ-001`)) ||
+        (await AsyncStorage.getItem(`${STORAGE_KEYS.UNLOCKED_EVIDENCE_PREFIX}case_001`));
+
+      const devEvidence = await AsyncStorage.getItem(
+        `${STORAGE_KEYS.UNLOCKED_EVIDENCE_PREFIX}case_dev_danube`
+      );
+
+      if (legacyEvidence && !devEvidence) {
+        await AsyncStorage.setItem(
+          `${STORAGE_KEYS.UNLOCKED_EVIDENCE_PREFIX}case_dev_danube`,
+          legacyEvidence
+        );
+      }
+    } catch {
+      // Safe fallback
+    }
+  },
+
   async getActiveCaseId(): Promise<string | null> {
     try {
       return await AsyncStorage.getItem(STORAGE_KEYS.ACTIVE_CASE_ID);
