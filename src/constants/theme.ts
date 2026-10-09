@@ -3,6 +3,7 @@ import { Platform } from 'react-native';
 /**
  * CASE ZERO Design Tokens
  * Neo-Noir Budapest Aesthetic
+ * High-Contrast Accessible Colors
  */
 export const NoirColors = {
   // Atmospheric Backgrounds
@@ -15,25 +16,26 @@ export const NoirColors = {
   goldPrimary: '#C5A059',
   goldLight: '#DFC07B',
   goldDark: '#8F6E31',
-  goldMuted: 'rgba(197, 160, 89, 0.15)',
-  goldBorder: 'rgba(197, 160, 89, 0.35)',
+  goldMuted: 'rgba(197, 160, 89, 0.18)',
+  goldBorder: 'rgba(197, 160, 89, 0.45)',
 
-  // Off-white Readable Typography
-  textPrimary: '#F2F4F7',
-  textSecondary: '#A3A8B5',
-  textMuted: '#646D7D',
+  // Off-white & High-Contrast Typography (WCAG AA & AAA compliant)
+  textPrimary: '#F2F4F7',   // Crisp, high contrast (~16:1 on surface)
+  textSecondary: '#B4BAC7', // Accessible secondary silver (~8.5:1 on surface)
+  textMuted: '#9AA2B1',     // Clear tertiary label color (~5.5:1 on surface, >4.5:1)
 
-  // Detective Semantic Indicators
-  crimson: '#D94545',
-  crimsonMuted: 'rgba(217, 69, 69, 0.18)',
-  emerald: '#359E6D',
-  emeraldMuted: 'rgba(53, 158, 109, 0.18)',
-  cyan: '#589FB8',
-  cyanMuted: 'rgba(88, 159, 184, 0.18)',
+  // Detective Semantic Indicators (high-visibility tints on dark backgrounds)
+  crimson: '#E85353',
+  crimsonMuted: 'rgba(232, 83, 83, 0.22)',
+  crimsonBorder: 'rgba(232, 83, 83, 0.5)',
+  emerald: '#3DB87E',
+  emeraldMuted: 'rgba(61, 184, 126, 0.22)',
+  cyan: '#64B2CE',
+  cyanMuted: 'rgba(100, 178, 206, 0.22)',
 
   // Structural Borders
-  borderSubtle: '#1C212E',
-  borderStrong: '#2A3142',
+  borderSubtle: '#222838',
+  borderStrong: '#323B4F',
 } as const;
 
 export const Colors = {
@@ -58,13 +60,14 @@ export const Colors = {
 export type ThemeColor = keyof typeof Colors.dark;
 
 export const Spacing = {
+  xxs: 2,
   xs: 4,
   sm: 8,
   md: 12,
   lg: 16,
-  xl: 24,
-  xxl: 32,
-  xxxl: 48,
+  xl: 20,
+  xxl: 28,
+  xxxl: 40,
   // Numeric aliases for backward compatibility
   half: 2,
   one: 4,
@@ -76,6 +79,7 @@ export const Spacing = {
 } as const;
 
 export const Radius = {
+  xs: 4,
   sm: 6,
   md: 10,
   lg: 16,
@@ -101,4 +105,4 @@ export const Fonts = Platform.select({
 });
 
 export const BottomTabInset = Platform.select({ ios: 50, android: 80 }) ?? 0;
-export const MaxContentWidth = 720;
+export const MaxContentWidth = 640;

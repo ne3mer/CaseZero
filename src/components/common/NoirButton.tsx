@@ -88,7 +88,9 @@ export function NoirButton({
           color={variant === 'primary' ? '#0A0C10' : NoirColors.goldPrimary}
         />
       ) : (
-        <Text style={[styles.text, { color: getTextColor() }]}>
+        <Text
+          numberOfLines={2}
+          style={[styles.text, { color: getTextColor() }]}>
           {label.toUpperCase()}
         </Text>
       )}
@@ -98,17 +100,22 @@ export function NoirButton({
 
 const styles = StyleSheet.create({
   button: {
-    height: 48,
+    width: '100%',
+    alignSelf: 'stretch',
+    minHeight: 48,
     borderRadius: Radius.md,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: Spacing.xl,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm + 2,
     flexDirection: 'row',
   },
   text: {
     fontSize: 13,
     fontWeight: '700',
-    letterSpacing: 1.5,
+    letterSpacing: 1,
+    textAlign: 'center',
+    flexShrink: 1,
   },
   disabled: {
     opacity: 0.5,

@@ -2,6 +2,7 @@ import { DarkTheme, ThemeProvider, Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import * as SplashScreen from 'expo-splash-screen';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { NoirColors } from '@/constants/theme';
 
 SplashScreen.preventAutoHideAsync();
@@ -24,16 +25,18 @@ export default function RootLayout() {
   };
 
   return (
-    <ThemeProvider value={noirTheme}>
-      <StatusBar style="light" />
-      <Stack
-        screenOptions={{
-          headerShown: false,
-          contentStyle: { backgroundColor: NoirColors.background },
-          animation: 'fade',
-        }}>
-        <Stack.Screen name="index" />
-      </Stack>
-    </ThemeProvider>
+    <SafeAreaProvider>
+      <ThemeProvider value={noirTheme}>
+        <StatusBar style="light" />
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            contentStyle: { backgroundColor: NoirColors.background },
+            animation: 'fade',
+          }}>
+          <Stack.Screen name="index" />
+        </Stack>
+      </ThemeProvider>
+    </SafeAreaProvider>
   );
 }

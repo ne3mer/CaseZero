@@ -36,9 +36,12 @@ export function NoirCard({
 
 const styles = StyleSheet.create({
   card: {
+    width: '100%',
+    alignSelf: 'stretch',
     borderRadius: Radius.md,
     borderWidth: 1,
-    padding: Spacing.lg,
+    padding: Spacing.md,
+    overflow: 'hidden',
   },
   accentBorder: {
     borderLeftWidth: 3,

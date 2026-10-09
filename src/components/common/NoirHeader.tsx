@@ -16,15 +16,23 @@ export function NoirHeader({
       {/* City & Time Telemetry Stamp */}
       <View style={styles.telemetryRow}>
         <View style={styles.pulsingDot} />
-        <Text style={styles.telemetryText}>
+        <Text style={styles.telemetryText} numberOfLines={2}>
           {location} — {time}
         </Text>
       </View>
 
       {/* Main Title */}
       <View style={styles.titleWrapper}>
-        <Text style={styles.titleMain}>CASE ZERO</Text>
-        <Text style={styles.titleSub}>CRIMINAL INVESTIGATION DIVISION</Text>
+        <Text
+          style={styles.titleMain}
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.75}>
+          CASE ZERO
+        </Text>
+        <Text style={styles.titleSub} numberOfLines={1}>
+          CRIMINAL INVESTIGATION DIVISION
+        </Text>
       </View>
 
       {/* Decorative Gold Accent Bar */}
@@ -38,50 +46,57 @@ export function NoirHeader({
 
 const styles = StyleSheet.create({
   container: {
-    paddingVertical: Spacing.md,
+    width: '100%',
+    alignSelf: 'stretch',
+    paddingVertical: Spacing.xs,
     gap: Spacing.xs,
   },
   telemetryRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.xs + 2,
+    flexWrap: 'wrap',
   },
   pulsingDot: {
     width: 6,
     height: 6,
     borderRadius: 3,
     backgroundColor: NoirColors.crimson,
+    flexShrink: 0,
   },
   telemetryText: {
     fontSize: 10,
     fontWeight: '700',
     color: NoirColors.textMuted,
-    letterSpacing: 1.5,
+    letterSpacing: 1,
+    flexShrink: 1,
   },
   titleWrapper: {
-    marginTop: Spacing.xs,
+    marginTop: 2,
     gap: 2,
+    width: '100%',
   },
   titleMain: {
-    fontSize: 32,
+    fontSize: 30,
     fontWeight: '900',
     color: NoirColors.textPrimary,
-    letterSpacing: 4,
+    letterSpacing: 3,
   },
   titleSub: {
     fontSize: 9,
     fontWeight: '700',
     color: NoirColors.goldLight,
-    letterSpacing: 2,
+    letterSpacing: 1.5,
   },
   accentBarContainer: {
     flexDirection: 'row',
-    marginTop: Spacing.sm,
+    marginTop: Spacing.xs,
     height: 2,
     alignItems: 'center',
+    width: '100%',
   },
   accentBarGold: {
-    width: 48,
+    width: 44,
     height: 2,
     backgroundColor: NoirColors.goldPrimary,
   },

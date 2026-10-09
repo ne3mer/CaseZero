@@ -22,25 +22,25 @@ export function DossierBadge({ label, variant = 'gold', style }: DossierBadgePro
       case 'crimson':
         return {
           bg: NoirColors.crimsonMuted,
-          border: 'rgba(217, 69, 69, 0.4)',
-          text: '#F28B82',
+          border: NoirColors.crimsonBorder,
+          text: '#FFA4A4',
         };
       case 'emerald':
         return {
           bg: NoirColors.emeraldMuted,
-          border: 'rgba(53, 158, 109, 0.4)',
-          text: '#81C995',
+          border: 'rgba(61, 184, 126, 0.45)',
+          text: '#9AE8BE',
         };
       case 'cyan':
         return {
           bg: NoirColors.cyanMuted,
-          border: 'rgba(88, 159, 184, 0.4)',
-          text: '#80DEEA',
+          border: 'rgba(100, 178, 206, 0.45)',
+          text: '#A6E4F8',
         };
       case 'neutral':
       default:
         return {
-          bg: 'rgba(255, 255, 255, 0.05)',
+          bg: 'rgba(255, 255, 255, 0.06)',
           border: NoirColors.borderStrong,
           text: NoirColors.textSecondary,
         };
@@ -56,22 +56,28 @@ export function DossierBadge({ label, variant = 'gold', style }: DossierBadgePro
         { backgroundColor: colors.bg, borderColor: colors.border },
         style,
       ]}>
-      <Text style={[styles.label, { color: colors.text }]}>{label.toUpperCase()}</Text>
+      <Text
+        numberOfLines={1}
+        style={[styles.label, { color: colors.text }]}>
+        {label.toUpperCase()}
+      </Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   badge: {
-    paddingHorizontal: Spacing.sm + 2,
+    paddingHorizontal: Spacing.sm,
     paddingVertical: 3,
-    borderRadius: Radius.sm,
+    borderRadius: Radius.xs,
     borderWidth: 1,
     alignSelf: 'flex-start',
+    maxWidth: '100%',
   },
   label: {
     fontSize: 10,
     fontWeight: '700',
-    letterSpacing: 1.2,
+    letterSpacing: 1,
+    flexShrink: 1,
   },
 });
