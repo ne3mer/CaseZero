@@ -100,17 +100,30 @@ export default function InvestigationScreen() {
               <DossierBadge label="ACTIVE INVESTIGATION" variant="emerald" />
             </View>
 
-            {/* Evidence Locker Fast-Access Button */}
-            <Pressable
-              onPress={() => setIsInventoryOpen(true)}
-              style={({ pressed }) => [
-                styles.inventoryFastBtn,
-                pressed && styles.btnPressed,
-              ]}>
-              <Text style={styles.inventoryFastBtnText}>
-                DOSSIER INVENTORY ({collectedCount}/{totalEvidenceCount})
-              </Text>
-            </Pressable>
+            {/* Fast Action Buttons */}
+            <View style={styles.fastActionButtons}>
+              <Pressable
+                onPress={() => router.push('/evidence-board')}
+                style={({ pressed }) => [
+                  styles.boardFastBtn,
+                  pressed && styles.btnPressed,
+                ]}>
+                <Text style={styles.boardFastBtnText}>
+                  EVIDENCE BOARD →
+                </Text>
+              </Pressable>
+
+              <Pressable
+                onPress={() => setIsInventoryOpen(true)}
+                style={({ pressed }) => [
+                  styles.inventoryFastBtn,
+                  pressed && styles.btnPressed,
+                ]}>
+                <Text style={styles.inventoryFastBtnText}>
+                  LOCKER ({collectedCount}/{totalEvidenceCount})
+                </Text>
+              </Pressable>
+            </View>
           </View>
 
           <Text style={styles.sceneTitle}>
@@ -231,11 +244,16 @@ export default function InvestigationScreen() {
           </View>
         </View>
 
-        {/* Inventory Action Button */}
+        {/* Board & Inventory Actions Footer */}
         <View style={styles.actionsFooter}>
           <NoirButton
-            label={`OPEN EVIDENCE INVENTORY (${collectedCount}/${totalEvidenceCount})`}
+            label="OPEN EVIDENCE BOARD // DEDUCE"
             variant="primary"
+            onPress={() => router.push('/evidence-board')}
+          />
+          <NoirButton
+            label={`EVIDENCE LOCKER (${collectedCount}/${totalEvidenceCount})`}
+            variant="secondary"
             onPress={() => setIsInventoryOpen(true)}
           />
         </View>
@@ -306,6 +324,26 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: Spacing.xs,
     alignItems: 'center',
+  },
+  fastActionButtons: {
+    flexDirection: 'row',
+    gap: 6,
+    alignItems: 'center',
+    flexWrap: 'wrap',
+  },
+  boardFastBtn: {
+    backgroundColor: 'rgba(61, 184, 126, 0.15)',
+    borderWidth: 1,
+    borderColor: NoirColors.emerald,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: Radius.xs,
+  },
+  boardFastBtnText: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: NoirColors.emerald,
+    letterSpacing: 0.6,
   },
   inventoryFastBtn: {
     backgroundColor: 'rgba(197, 160, 89, 0.12)',
@@ -473,6 +511,7 @@ const styles = StyleSheet.create({
   actionsFooter: {
     width: '100%',
     paddingTop: Spacing.xs,
+    gap: Spacing.sm,
   },
   btnPressed: {
     opacity: 0.75,

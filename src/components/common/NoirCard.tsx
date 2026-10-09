@@ -1,12 +1,12 @@
 import React, { ReactNode } from 'react';
-import { StyleSheet, View, ViewStyle } from 'react-native';
+import { StyleProp, StyleSheet, View, ViewStyle } from 'react-native';
 import { NoirColors, Radius, Spacing } from '../../constants/theme';
 
 interface NoirCardProps {
   children: ReactNode;
   variant?: 'surface' | 'elevated';
   hasGoldAccent?: boolean;
-  style?: ViewStyle;
+  style?: StyleProp<ViewStyle>;
 }
 
 export function NoirCard({

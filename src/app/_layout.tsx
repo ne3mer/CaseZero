@@ -38,6 +38,7 @@ export default function RootLayout() {
           <Stack.Screen name="cases" />
           <Stack.Screen name="briefing" />
           <Stack.Screen name="investigation" />
+          <Stack.Screen name="evidence-board" />
         </Stack>
       </ThemeProvider>
     </SafeAreaProvider>
