@@ -30,6 +30,23 @@ export const EvidenceSchema = z.record(z.string(), z.any()).and(
 export type Evidence = z.infer<typeof EvidenceSchema>;
 
 /**
+ * Interactive Hotspot within a Crime Scene
+ * Uses normalized coordinates (0.0 to 1.0) relative to scene image dimensions.
+ */
+export const SceneHotspotSchema = z.object({
+  id: z.string().min(1),
+  evidenceId: z.string().min(1),
+  label: z.string().min(1),
+  // Normalized center coordinates (0.0 to 1.0)
+  x: z.number().min(0).max(1),
+  y: z.number().min(0).max(1),
+  // Normalized hit-radius for touch detection
+  radius: z.number().min(0.01).max(0.5).default(0.07),
+  descriptionHint: z.string().optional(),
+});
+export type SceneHotspot = z.infer<typeof SceneHotspotSchema>;
+
+/**
  * Person of Interest / Suspect record
  */
 export const SuspectSchema = z.object({
@@ -122,6 +139,7 @@ export const CaseSchema = z.object({
   initialFacts: z.array(z.string()).optional(),
   isLocked: z.boolean().default(false),
   coverImageKey: z.string().optional(),
+  hotspots: z.array(SceneHotspotSchema).optional().default([]),
   evidence: z.array(EvidenceSchema),
   suspects: z.array(SuspectSchema),
   timeline: z.array(TimelineEventSchema),

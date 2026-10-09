@@ -13,44 +13,57 @@ import { DossierBadge } from '@/components/common/DossierBadge';
 import { NoirButton } from '@/components/common/NoirButton';
 import { NoirCard } from '@/components/common/NoirCard';
 import { NoirTopBar } from '@/components/common/NoirTopBar';
+import { CrimeSceneCanvas } from '@/components/investigation/CrimeSceneCanvas';
+import { EvidenceInspectionModal } from '@/components/investigation/EvidenceInspectionModal';
+import { EvidenceInventoryModal } from '@/components/investigation/EvidenceInventoryModal';
 import { EvidenceImages, SceneImages } from '@/constants/assets';
 import { MaxContentWidth, NoirColors, Radius, Spacing } from '@/constants/theme';
 import { getCaseById } from '@/core/data/cases';
 import { SAMPLE_DEV_CASE } from '@/core/data/sample-case';
+import { Evidence, SceneHotspot } from '@/core/types/case';
 import { useGameStore } from '@/store/game-store';
 
 export default function InvestigationScreen() {
   const router = useRouter();
-  const { isInitialized, initialize, unlockedEvidenceIds, unlockEvidence, activeCaseId } =
+  const { initialize, unlockedEvidenceIds, unlockEvidence, activeCaseId } =
     useGameStore();
-  const [selectedEvidenceId, setSelectedEvidenceId] = useState<string | null>(
-    null
-  );
-  const [actionFeedback, setActionFeedback] = useState<string | null>(null);
+
+  const [inspectingHotspot, setInspectingHotspot] = useState<SceneHotspot | null>(null);
+  const [inspectingEvidence, setInspectingEvidence] = useState<Evidence | null>(null);
+  const [isInventoryOpen, setIsInventoryOpen] = useState<boolean>(false);
+  const [collectionToast, setCollectionToast] = useState<string | null>(null);
 
   useEffect(() => {
     initialize();
   }, [initialize]);
 
   const activeCase = (activeCaseId ? getCaseById(activeCaseId) : null) || SAMPLE_DEV_CASE;
+  const hotspots: SceneHotspot[] = activeCase.hotspots || [];
 
-  const handleExamineScene = () => {
-    const remaining = activeCase.evidence.filter(
-      (e) => !unlockedEvidenceIds.includes(e.id)
+  const handleSelectHotspot = (hotspot: SceneHotspot) => {
+    const matchedEvidence = activeCase.evidence.find(
+      (e) => e.id === hotspot.evidenceId
     );
-
-    if (remaining.length > 0) {
-      const nextClue = remaining[0];
-      unlockEvidence(nextClue.id);
-      setSelectedEvidenceId(nextClue.id);
-      setActionFeedback(`CLUE RECOVERED: ${nextClue.title.toUpperCase()}`);
-    } else {
-      setActionFeedback('ALL SCENE EVIDENCE LOGGED');
+    if (matchedEvidence) {
+      setInspectingHotspot(hotspot);
+      setInspectingEvidence(matchedEvidence);
     }
   };
 
-  const getEvidenceImage = (id: string) => {
-    return EvidenceImages[id] || EvidenceImages.ev_spent_shell_casing;
+  const handleSelectEvidenceDirectly = (evidence: Evidence) => {
+    const matchedHotspot = hotspots.find((h) => h.evidenceId === evidence.id) || null;
+    setInspectingHotspot(matchedHotspot);
+    setInspectingEvidence(evidence);
+  };
+
+  const handleCollectEvidence = async (evidenceId: string) => {
+    if (unlockedEvidenceIds.includes(evidenceId)) return;
+
+    await unlockEvidence(evidenceId);
+    const item = activeCase.evidence.find((e) => e.id === evidenceId);
+    const itemName = item ? item.title.toUpperCase() : 'MATERIAL EVIDENCE';
+    setCollectionToast(`CLUE SECURED: ${itemName}`);
+    setTimeout(() => setCollectionToast(null), 3500);
   };
 
   const getSceneImage = (key?: string) => {
@@ -59,14 +72,17 @@ export default function InvestigationScreen() {
     return SceneImages.watchmakerAtelier;
   };
 
+  const collectedCount = unlockedEvidenceIds.length;
+  const totalEvidenceCount = activeCase.evidence.length;
+
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
-      {/* Top Bar Navigation */}
+      {/* Top Bar with Quick Access to Evidence Inventory */}
       <View style={styles.topBarWrapper}>
         <NoirTopBar
           onBack={() => router.back()}
-          backLabel="CASE BRIEFING"
-          rightBadge="CRIME SCENE"
+          backLabel="BRIEFING"
+          rightBadge={`${activeCase.caseNumber} // SCENE`}
         />
       </View>
 
@@ -75,156 +91,179 @@ export default function InvestigationScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
         bounces={true}>
-        {/* Crime Scene Visual Snapshot Card */}
-        <NoirCard variant="elevated" hasGoldAccent style={styles.sceneCard}>
-          <View style={styles.sceneImageContainer}>
-            <Image
-              source={getSceneImage(activeCase.coverImageKey)}
-              style={styles.sceneImage}
-              resizeMode="cover"
-            />
-            <View style={styles.sceneOverlay} />
-            <View style={styles.sceneBadges}>
+        {/* Crime Scene Atmospheric Header */}
+        <View style={styles.sceneHeader}>
+          <View style={styles.sceneHeaderTop}>
+            <View style={styles.sceneBadgeRow}>
               <DossierBadge label={activeCase.caseNumber} variant="gold" />
               <DossierBadge label="DISTRICT VIII" variant="neutral" />
+              <DossierBadge label="ACTIVE INVESTIGATION" variant="emerald" />
             </View>
+
+            {/* Evidence Locker Fast-Access Button */}
+            <Pressable
+              onPress={() => setIsInventoryOpen(true)}
+              style={({ pressed }) => [
+                styles.inventoryFastBtn,
+                pressed && styles.btnPressed,
+              ]}>
+              <Text style={styles.inventoryFastBtnText}>
+                DOSSIER INVENTORY ({collectedCount}/{totalEvidenceCount})
+              </Text>
+            </Pressable>
           </View>
 
-          <View style={styles.sceneInfo}>
-            <View style={styles.sceneHeaderRow}>
-              <Text style={styles.sceneTitle}>{activeCase.title.toUpperCase()}</Text>
-              <Text style={styles.sceneTime}>{activeCase.timeReported}</Text>
-            </View>
-            <Text style={styles.scenePrompt}>
-              Népszínház Utca Atelier — Search the environment for physical ballistics and documentation.
-            </Text>
-          </View>
+          <Text style={styles.sceneTitle}>
+            NÉPSZÍNHÁZ UTCA // ATELIER
+          </Text>
+          <Text style={styles.sceneSub}>
+            EXAMINE VISIBLE OBJECTS IN THE WORKSHOP TO COLLECT MATERIAL CLUES
+          </Text>
+        </View>
 
-          {/* Quick Scene Action Button */}
-          <View style={styles.sceneActionWrapper}>
-            <NoirButton
-              label="EXAMINE ENVIRONMENT"
-              variant="primary"
-              onPress={handleExamineScene}
-            />
-          </View>
-        </NoirCard>
-
-        {/* Action Feedback Prompt */}
-        {actionFeedback && (
-          <View style={styles.feedbackBanner}>
-            <Text style={styles.feedbackText}>{actionFeedback}</Text>
+        {/* Collection Feedback Toast */}
+        {collectionToast && (
+          <View style={styles.toastBanner}>
+            <Text style={styles.toastText}>✓ {collectionToast}</Text>
           </View>
         )}
 
-        {/* Visual Telemetry Clue Counters */}
-        <View style={styles.countersRow}>
-          <View style={styles.counterBox}>
-            <Text style={styles.counterNumber}>
-              {isInitialized ? unlockedEvidenceIds.length : 1} /{' '}
-              {activeCase.evidence.length}
+        {/* Interactive Crime Scene Canvas with Touch Hotspots & Zoom */}
+        <CrimeSceneCanvas
+          imageSource={getSceneImage(activeCase.coverImageKey)}
+          hotspots={hotspots}
+          unlockedEvidenceIds={unlockedEvidenceIds}
+          onSelectHotspot={handleSelectHotspot}
+        />
+
+        {/* Crime Scene Quick Telemetry */}
+        <View style={styles.telemetryRow}>
+          <View style={styles.telemetryBox}>
+            <Text style={styles.telemetryValue}>{hotspots.length}</Text>
+            <Text style={styles.telemetryLabel}>SCENE HOTSPOTS</Text>
+          </View>
+          <View style={styles.telemetryBox}>
+            <Text style={styles.telemetryValue}>
+              {collectedCount} / {totalEvidenceCount}
             </Text>
-            <Text style={styles.counterLabel}>EVIDENCE</Text>
+            <Text style={styles.telemetryLabel}>CLUES SECURED</Text>
           </View>
-          <View style={styles.counterBox}>
-            <Text style={styles.counterNumber}>{activeCase.suspects.length}</Text>
-            <Text style={styles.counterLabel}>SUSPECTS</Text>
-          </View>
-          <View style={styles.counterBox}>
-            <Text style={styles.counterNumber}>{activeCase.timeline.length}</Text>
-            <Text style={styles.counterLabel}>TIMELINE</Text>
+          <View style={styles.telemetryBox}>
+            <Text style={styles.telemetryValue}>
+              {totalEvidenceCount - collectedCount}
+            </Text>
+            <Text style={styles.telemetryLabel}>REMAINING</Text>
           </View>
         </View>
 
-        {/* Visual-First Evidence Cards List */}
-        <View style={styles.evidenceSection}>
-          <Text style={styles.sectionHeader}>RECOVERED EVIDENCE</Text>
+        {/* Recovered Evidence Quick Drawer Section */}
+        <View style={styles.evidenceDrawerSection}>
+          <View style={styles.drawerHeaderRow}>
+            <Text style={styles.drawerTitle}>RECOVERED MATERIAL CLUES</Text>
+            <Pressable onPress={() => setIsInventoryOpen(true)}>
+              <Text style={styles.viewAllText}>VIEW FULL INVENTORY →</Text>
+            </Pressable>
+          </View>
 
-          <View style={styles.evidenceList}>
+          <View style={styles.evidenceCardList}>
             {activeCase.evidence.map((item) => {
-              const isUnlocked = unlockedEvidenceIds.includes(item.id);
-              const isSelected = selectedEvidenceId === item.id;
+              const isCollected = unlockedEvidenceIds.includes(item.id);
+              const itemImage =
+                EvidenceImages[item.id] || EvidenceImages.ev_spent_shell_casing;
 
               return (
                 <Pressable
                   key={item.id}
-                  disabled={!isUnlocked}
-                  onPress={() =>
-                    setSelectedEvidenceId((prev) =>
-                      prev === item.id ? null : item.id
-                    )
-                  }
+                  disabled={!isCollected}
+                  onPress={() => handleSelectEvidenceDirectly(item)}
                   style={({ pressed }) => [
-                    styles.evidenceCardPressable,
-                    pressed && styles.evidenceCardPressed,
+                    styles.clueCardPressable,
+                    pressed && styles.btnPressed,
                   ]}>
                   <NoirCard
-                    variant={isUnlocked ? 'elevated' : 'surface'}
-                    hasGoldAccent={isSelected}
-                    style={isUnlocked ? styles.evidenceCardUnlocked : styles.evidenceCardLocked}>
-                    <View style={styles.evidenceRow}>
-                      {/* Visual Thumbnail */}
-                      <View style={styles.thumbnailContainer}>
-                        {isUnlocked ? (
+                    variant={isCollected ? 'elevated' : 'surface'}
+                    hasGoldAccent={isCollected && item.isKeyEvidence}
+                    style={isCollected ? styles.clueCardUnlocked : styles.clueCardLocked}>
+                    <View style={styles.clueRow}>
+                      {/* Clue Thumbnail */}
+                      <View style={styles.clueThumbnailContainer}>
+                        {isCollected ? (
                           <Image
-                            source={getEvidenceImage(item.id)}
-                            style={styles.thumbnail}
+                            source={itemImage}
+                            style={styles.clueThumbnail}
                             resizeMode="cover"
                           />
                         ) : (
-                          <View style={styles.thumbnailLocked}>
-                            <Text style={styles.lockIcon}>?</Text>
+                          <View style={styles.clueThumbnailLocked}>
+                            <Text style={styles.clueLockedQuestion}>?</Text>
                           </View>
                         )}
                       </View>
 
-                      {/* Evidence Metadata (Title + 1-Sentence Observation) */}
-                      <View style={styles.evidenceTextGroup}>
-                        <View style={styles.evidenceTopRow}>
+                      {/* Clue Info */}
+                      <View style={styles.clueTextGroup}>
+                        <View style={styles.clueTopRow}>
                           <Text
                             numberOfLines={1}
                             style={[
-                              styles.evidenceTitle,
-                              !isUnlocked && styles.evidenceTitleLocked,
+                              styles.clueTitle,
+                              !isCollected && styles.clueTitleLocked,
                             ]}>
-                            {isUnlocked ? item.title : 'UNDISCOVERED CLUE'}
+                            {isCollected ? item.title : 'UNDISCOVERED CLUE'}
                           </Text>
                           <DossierBadge
-                            label={isUnlocked ? item.type : 'LOCKED'}
-                            variant={isUnlocked ? 'cyan' : 'neutral'}
+                            label={isCollected ? item.type : 'UNSEARCHED'}
+                            variant={isCollected ? 'cyan' : 'neutral'}
                           />
                         </View>
 
-                        {/* One Short Description Line (Show, Don't Tell) */}
-                        <Text
-                          numberOfLines={isSelected ? undefined : 2}
-                          style={styles.evidenceObservation}>
-                          {isUnlocked
+                        <Text numberOfLines={2} style={styles.clueObservation}>
+                          {isCollected
                             ? item.shortObservation || item.description
-                            : 'Examine the crime scene to uncover this material proof.'}
+                            : 'Inspect the highlighted objects inside the workshop.'}
                         </Text>
                       </View>
                     </View>
-
-                    {/* Progressive Disclosure: Expanded Location and Forensics */}
-                    {isUnlocked && isSelected && (
-                      <View style={styles.disclosureSection}>
-                        <View style={styles.disclosureDivider} />
-                        <Text style={styles.disclosureLocation}>
-                          FOUND: {item.locationFound.toUpperCase()}
-                        </Text>
-                        <Text style={styles.disclosureFullDesc}>
-                          {item.description}
-                        </Text>
-                      </View>
-                    )}
                   </NoirCard>
                 </Pressable>
               );
             })}
           </View>
         </View>
+
+        {/* Inventory Action Button */}
+        <View style={styles.actionsFooter}>
+          <NoirButton
+            label={`OPEN EVIDENCE INVENTORY (${collectedCount}/${totalEvidenceCount})`}
+            variant="primary"
+            onPress={() => setIsInventoryOpen(true)}
+          />
+        </View>
       </ScrollView>
+
+      {/* Focused Evidence Inspection Modal */}
+      <EvidenceInspectionModal
+        visible={!!inspectingEvidence}
+        evidence={inspectingEvidence}
+        hotspot={inspectingHotspot}
+        isAlreadyCollected={
+          inspectingEvidence ? unlockedEvidenceIds.includes(inspectingEvidence.id) : false
+        }
+        onCollect={handleCollectEvidence}
+        onClose={() => {
+          setInspectingEvidence(null);
+          setInspectingHotspot(null);
+        }}
+      />
+
+      {/* Full Evidence Inventory Modal */}
+      <EvidenceInventoryModal
+        visible={isInventoryOpen}
+        allEvidence={activeCase.evidence}
+        unlockedEvidenceIds={unlockedEvidenceIds}
+        onSelectEvidence={handleSelectEvidenceDirectly}
+        onClose={() => setIsInventoryOpen(false)}
+      />
     </SafeAreaView>
   );
 }
@@ -248,220 +287,194 @@ const styles = StyleSheet.create({
     maxWidth: MaxContentWidth,
     alignSelf: 'center',
     paddingHorizontal: Spacing.md,
-    paddingTop: Spacing.md,
+    paddingTop: Spacing.sm,
     paddingBottom: Spacing.xxxl,
     gap: Spacing.md,
   },
-  sceneCard: {
-    padding: 0,
-    overflow: 'hidden',
-  },
-  sceneImageContainer: {
-    width: '100%',
-    height: 160,
-    position: 'relative',
-    backgroundColor: '#050608',
-  },
-  sceneImage: {
-    width: '100%',
-    height: '100%',
-  },
-  sceneOverlay: {
-    ...StyleSheet.absoluteFill,
-    backgroundColor: 'rgba(9, 11, 15, 0.25)',
-  },
-  sceneBadges: {
-    position: 'absolute',
-    top: Spacing.sm,
-    left: Spacing.sm,
-    flexDirection: 'row',
-    gap: Spacing.xs,
-  },
-  sceneInfo: {
-    padding: Spacing.md,
+  sceneHeader: {
     gap: 4,
     width: '100%',
   },
-  sceneHeaderRow: {
+  sceneHeaderTop: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    width: '100%',
+    flexWrap: 'wrap',
+    gap: Spacing.xs,
+  },
+  sceneBadgeRow: {
+    flexDirection: 'row',
+    gap: Spacing.xs,
+    alignItems: 'center',
+  },
+  inventoryFastBtn: {
+    backgroundColor: 'rgba(197, 160, 89, 0.12)',
+    borderWidth: 1,
+    borderColor: NoirColors.goldBorder,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: Radius.xs,
+  },
+  inventoryFastBtnText: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: NoirColors.goldLight,
+    letterSpacing: 0.6,
   },
   sceneTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: '900',
     color: NoirColors.textPrimary,
-    letterSpacing: 1,
+    letterSpacing: 1.2,
+    marginTop: 2,
   },
-  sceneTime: {
+  sceneSub: {
     fontSize: 10,
     fontWeight: '700',
     color: NoirColors.goldLight,
+    letterSpacing: 0.6,
   },
-  scenePrompt: {
-    fontSize: 12,
-    lineHeight: 17,
-    color: NoirColors.textSecondary,
-    flexWrap: 'wrap',
-  },
-  sceneActionWrapper: {
-    paddingHorizontal: Spacing.md,
-    paddingBottom: Spacing.md,
-    width: '100%',
-  },
-  feedbackBanner: {
-    backgroundColor: NoirColors.goldMuted,
+  toastBanner: {
+    backgroundColor: NoirColors.emeraldMuted,
     borderWidth: 1,
-    borderColor: NoirColors.goldBorder,
-    paddingVertical: Spacing.sm,
+    borderColor: NoirColors.emerald,
+    paddingVertical: Spacing.xs + 2,
     paddingHorizontal: Spacing.md,
     borderRadius: Radius.sm,
     alignItems: 'center',
     width: '100%',
   },
-  feedbackText: {
-    fontSize: 10,
+  toastText: {
+    fontSize: 11,
     fontWeight: '800',
-    color: NoirColors.goldLight,
+    color: NoirColors.emerald,
     letterSpacing: 0.8,
-    textAlign: 'center',
   },
-  countersRow: {
+  telemetryRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     gap: Spacing.xs,
     width: '100%',
   },
-  counterBox: {
+  telemetryBox: {
     flex: 1,
-    minWidth: 0,
     backgroundColor: 'rgba(255, 255, 255, 0.03)',
-    paddingVertical: Spacing.sm,
-    paddingHorizontal: 2,
     borderRadius: Radius.sm,
-    alignItems: 'center',
     borderWidth: 1,
     borderColor: NoirColors.borderSubtle,
+    paddingVertical: Spacing.sm,
+    alignItems: 'center',
   },
-  counterNumber: {
+  telemetryValue: {
     fontSize: 15,
     fontWeight: '800',
     color: NoirColors.goldPrimary,
   },
-  counterLabel: {
-    fontSize: 9,
+  telemetryLabel: {
+    fontSize: 8,
     fontWeight: '700',
     color: NoirColors.textMuted,
     marginTop: 2,
-    letterSpacing: 0.4,
+    letterSpacing: 0.5,
     textAlign: 'center',
   },
-  evidenceSection: {
+  evidenceDrawerSection: {
     gap: Spacing.sm,
     width: '100%',
   },
-  sectionHeader: {
+  drawerHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  drawerTitle: {
     fontSize: 11,
     fontWeight: '800',
     color: NoirColors.goldLight,
     letterSpacing: 1,
   },
-  evidenceList: {
-    gap: Spacing.sm + 2,
+  viewAllText: {
+    fontSize: 9,
+    fontWeight: '700',
+    color: NoirColors.goldPrimary,
+    letterSpacing: 0.5,
+  },
+  evidenceCardList: {
+    gap: Spacing.sm,
     width: '100%',
   },
-  evidenceCardPressable: {
+  clueCardPressable: {
     width: '100%',
   },
-  evidenceCardPressed: {
-    opacity: 0.85,
+  clueCardUnlocked: {
+    padding: Spacing.sm,
   },
-  evidenceCardUnlocked: {
-    gap: Spacing.xs,
+  clueCardLocked: {
+    padding: Spacing.sm,
+    opacity: 0.55,
   },
-  evidenceCardLocked: {
-    gap: Spacing.xs,
-    opacity: 0.5,
-  },
-  evidenceRow: {
+  clueRow: {
     flexDirection: 'row',
-    gap: Spacing.md,
+    gap: Spacing.sm + 2,
     alignItems: 'center',
     width: '100%',
   },
-  thumbnailContainer: {
-    width: 60,
-    height: 60,
-    borderRadius: Radius.sm,
+  clueThumbnailContainer: {
+    width: 54,
+    height: 54,
+    borderRadius: Radius.xs,
     overflow: 'hidden',
     backgroundColor: '#050608',
     borderWidth: 1,
     borderColor: NoirColors.borderStrong,
     flexShrink: 0,
   },
-  thumbnail: {
+  clueThumbnail: {
     width: '100%',
     height: '100%',
   },
-  thumbnailLocked: {
+  clueThumbnailLocked: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: 'rgba(255, 255, 255, 0.03)',
   },
-  lockIcon: {
-    fontSize: 20,
+  clueLockedQuestion: {
+    fontSize: 18,
     fontWeight: '900',
     color: NoirColors.textMuted,
   },
-  evidenceTextGroup: {
+  clueTextGroup: {
     flex: 1,
-    gap: 3,
+    gap: 2,
     minWidth: 0,
   },
-  evidenceTopRow: {
+  clueTopRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     gap: Spacing.xs,
-    width: '100%',
   },
-  evidenceTitle: {
-    fontSize: 13,
-    fontWeight: '700',
+  clueTitle: {
+    fontSize: 12,
+    fontWeight: '800',
     color: NoirColors.textPrimary,
     flex: 1,
   },
-  evidenceTitleLocked: {
+  clueTitleLocked: {
     color: NoirColors.textMuted,
   },
-  evidenceObservation: {
-    fontSize: 11,
-    lineHeight: 16,
+  clueObservation: {
+    fontSize: 10,
+    lineHeight: 14,
     color: NoirColors.textSecondary,
     flexWrap: 'wrap',
   },
-  disclosureSection: {
-    marginTop: Spacing.xs,
-    gap: 4,
+  actionsFooter: {
     width: '100%',
+    paddingTop: Spacing.xs,
   },
-  disclosureDivider: {
-    height: 1,
-    backgroundColor: NoirColors.borderSubtle,
-    marginVertical: 4,
-  },
-  disclosureLocation: {
-    fontSize: 9,
-    fontWeight: '800',
-    color: NoirColors.goldLight,
-    letterSpacing: 0.5,
-  },
-  disclosureFullDesc: {
-    fontSize: 11,
-    lineHeight: 16,
-    color: NoirColors.textSecondary,
-    flexWrap: 'wrap',
+  btnPressed: {
+    opacity: 0.75,
   },
 });

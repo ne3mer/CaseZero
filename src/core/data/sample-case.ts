@@ -36,6 +36,35 @@ export const SAMPLE_DEV_CASE: Case = CaseSchema.parse({
   ],
   isLocked: false,
   coverImageKey: 'watchmakerAtelier',
+  hotspots: [
+    {
+      id: 'hs_wall_safe',
+      evidenceId: 'ev_pocket_watch_log',
+      label: 'Ajar Wall Safe & Stacked Ledgers',
+      x: 0.68,
+      y: 0.48,
+      radius: 0.08,
+      descriptionHint: 'Steel safe swung open with document ledgers visible on shelf',
+    },
+    {
+      id: 'hs_workbench_casing',
+      evidenceId: 'ev_spent_shell_casing',
+      label: 'Workbench Floorboards & Ballistics',
+      x: 0.22,
+      y: 0.82,
+      radius: 0.08,
+      descriptionHint: 'Brass casing resting beside watchmaker tools near floor edge',
+    },
+    {
+      id: 'hs_coat_ticket',
+      evidenceId: 'ev_tram_ticket',
+      label: 'Transit Stub & Coat Pocket',
+      x: 0.42,
+      y: 0.62,
+      radius: 0.08,
+      descriptionHint: 'Transit ticket documented near the victim coat pocket',
+    },
+  ],
   evidence: [
     {
       id: 'ev_spent_shell_casing',
