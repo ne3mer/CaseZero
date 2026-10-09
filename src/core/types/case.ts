@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { CaseDeductionSchema } from './deduction';
 
 /**
  * Evidence item types encountered in crime scenes across Budapest
@@ -140,9 +141,12 @@ export const CaseSchema = z.object({
   isLocked: z.boolean().default(false),
   coverImageKey: z.string().optional(),
   hotspots: z.array(SceneHotspotSchema).optional().default([]),
+  deductions: z.array(CaseDeductionSchema).optional().default([]),
   evidence: z.array(EvidenceSchema),
   suspects: z.array(SuspectSchema),
   timeline: z.array(TimelineEventSchema),
   truth: TruthModelSchema,
 });
 export type Case = z.infer<typeof CaseSchema>;
+
+export * from './deduction';

@@ -1,9 +1,16 @@
 import { create } from 'zustand';
+import { evaluateDeductionAttempt } from '../core/logic/deduction-engine';
+import {
+  CaseDeduction,
+  DeductionAttempt,
+  DeductionEvaluationResult,
+} from '../core/types/deduction';
 import { CaseStorage } from '../storage/case-storage';
 
 interface GameState {
   activeCaseId: string;
   unlockedEvidenceIds: string[];
+  discoveredDeductionIds: string[];
   solvedCaseIds: string[];
   isInitialized: boolean;
 
@@ -11,6 +18,10 @@ interface GameState {
   initialize: () => Promise<void>;
   setActiveCase: (caseId: string) => Promise<void>;
   unlockEvidence: (evidenceId: string) => Promise<void>;
+  submitDeduction: (
+    attempt: DeductionAttempt,
+    caseDeductions: CaseDeduction[]
+  ) => Promise<DeductionEvaluationResult>;
   markCaseSolved: (caseId: string) => Promise<void>;
   resetActiveCaseProgress: (caseId: string) => Promise<void>;
 }
@@ -18,6 +29,7 @@ interface GameState {
 export const useGameStore = create<GameState>((set, get) => ({
   activeCaseId: 'case_dev_danube',
   unlockedEvidenceIds: ['ev_spent_shell_casing'],
+  discoveredDeductionIds: [],
   solvedCaseIds: [],
   isInitialized: false,
 
@@ -37,23 +49,31 @@ export const useGameStore = create<GameState>((set, get) => ({
       await CaseStorage.setActiveCaseId(activeCaseId);
     }
 
-    const unlockedEvidence = await CaseStorage.getUnlockedEvidence(activeCaseId);
+    const [unlockedEvidence, discoveredDeductions] = await Promise.all([
+      CaseStorage.getUnlockedEvidence(activeCaseId),
+      CaseStorage.getDiscoveredDeductions(activeCaseId),
+    ]);
 
     set({
       activeCaseId,
       solvedCaseIds: solvedCases,
       unlockedEvidenceIds:
         unlockedEvidence.length > 0 ? unlockedEvidence : ['ev_spent_shell_casing'],
+      discoveredDeductionIds: discoveredDeductions,
       isInitialized: true,
     });
   },
 
   setActiveCase: async (caseId: string) => {
     await CaseStorage.setActiveCaseId(caseId);
-    const unlocked = await CaseStorage.getUnlockedEvidence(caseId);
+    const [unlocked, deductions] = await Promise.all([
+      CaseStorage.getUnlockedEvidence(caseId),
+      CaseStorage.getDiscoveredDeductions(caseId),
+    ]);
     set({
       activeCaseId: caseId,
       unlockedEvidenceIds: unlocked.length > 0 ? unlocked : ['ev_spent_shell_casing'],
+      discoveredDeductionIds: deductions,
     });
   },
 
@@ -66,6 +86,30 @@ export const useGameStore = create<GameState>((set, get) => ({
     }
   },
 
+  submitDeduction: async (
+    attempt: DeductionAttempt,
+    caseDeductions: CaseDeduction[]
+  ): Promise<DeductionEvaluationResult> => {
+    const { activeCaseId, unlockedEvidenceIds, discoveredDeductionIds } = get();
+
+    const result = evaluateDeductionAttempt(
+      attempt,
+      caseDeductions,
+      unlockedEvidenceIds,
+      discoveredDeductionIds
+    );
+
+    if (result.status === 'VALID' && result.deductionId) {
+      if (!discoveredDeductionIds.includes(result.deductionId)) {
+        const updated = [...discoveredDeductionIds, result.deductionId];
+        set({ discoveredDeductionIds: updated });
+        await CaseStorage.saveDiscoveredDeductions(activeCaseId, updated);
+      }
+    }
+
+    return result;
+  },
+
   markCaseSolved: async (caseId: string) => {
     const { solvedCaseIds } = get();
     if (!solvedCaseIds.includes(caseId)) {
@@ -76,7 +120,13 @@ export const useGameStore = create<GameState>((set, get) => ({
   },
 
   resetActiveCaseProgress: async (caseId: string) => {
-    await CaseStorage.saveUnlockedEvidence(caseId, ['ev_spent_shell_casing']);
-    set({ unlockedEvidenceIds: ['ev_spent_shell_casing'] });
+    await Promise.all([
+      CaseStorage.saveUnlockedEvidence(caseId, ['ev_spent_shell_casing']),
+      CaseStorage.saveDiscoveredDeductions(caseId, []),
+    ]);
+    set({
+      unlockedEvidenceIds: ['ev_spent_shell_casing'],
+      discoveredDeductionIds: [],
+    });
   },
 }));

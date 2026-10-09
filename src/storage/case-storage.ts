@@ -4,6 +4,7 @@ const STORAGE_KEYS = {
   ACTIVE_CASE_ID: '@casezero:active_case_id',
   SOLVED_CASES: '@casezero:solved_cases',
   UNLOCKED_EVIDENCE_PREFIX: '@casezero:unlocked_evidence:',
+  DISCOVERED_DEDUCTIONS_PREFIX: '@casezero:discovered_deductions:',
   DETECTIVE_NOTES_PREFIX: '@casezero:detective_notes:',
   SETTINGS: '@casezero:settings',
 } as const;
@@ -48,6 +49,21 @@ export const CaseStorage = {
         await AsyncStorage.setItem(
           `${STORAGE_KEYS.UNLOCKED_EVIDENCE_PREFIX}case_dev_danube`,
           legacyEvidence
+        );
+      }
+
+      const legacyDeductions =
+        (await AsyncStorage.getItem(`${STORAGE_KEYS.DISCOVERED_DEDUCTIONS_PREFIX}CZ-001`)) ||
+        (await AsyncStorage.getItem(`${STORAGE_KEYS.DISCOVERED_DEDUCTIONS_PREFIX}case_001`));
+
+      const devDeductions = await AsyncStorage.getItem(
+        `${STORAGE_KEYS.DISCOVERED_DEDUCTIONS_PREFIX}case_dev_danube`
+      );
+
+      if (legacyDeductions && !devDeductions) {
+        await AsyncStorage.setItem(
+          `${STORAGE_KEYS.DISCOVERED_DEDUCTIONS_PREFIX}case_dev_danube`,
+          legacyDeductions
         );
       }
     } catch {
@@ -108,6 +124,28 @@ export const CaseStorage = {
       await AsyncStorage.setItem(
         `${STORAGE_KEYS.UNLOCKED_EVIDENCE_PREFIX}${caseId}`,
         JSON.stringify(evidenceIds)
+      );
+    } catch {
+      // Offline fallback
+    }
+  },
+
+  async getDiscoveredDeductions(caseId: string): Promise<string[]> {
+    try {
+      const data = await AsyncStorage.getItem(
+        `${STORAGE_KEYS.DISCOVERED_DEDUCTIONS_PREFIX}${caseId}`
+      );
+      return data ? JSON.parse(data) : [];
+    } catch {
+      return [];
+    }
+  },
+
+  async saveDiscoveredDeductions(caseId: string, deductionIds: string[]): Promise<void> {
+    try {
+      await AsyncStorage.setItem(
+        `${STORAGE_KEYS.DISCOVERED_DEDUCTIONS_PREFIX}${caseId}`,
+        JSON.stringify(deductionIds)
       );
     } catch {
       // Offline fallback

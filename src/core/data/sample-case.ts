@@ -164,6 +164,32 @@ export const SAMPLE_DEV_CASE: Case = CaseSchema.parse({
     murderWeaponId: 'ev_spent_shell_casing',
     conclusiveEvidenceIds: ['ev_spent_shell_casing', 'ev_pocket_watch_log'],
   },
+  deductions: [
+    {
+      id: 'ded_danube_ballistics_report',
+      caseId: 'case_dev_danube',
+      title: 'Ballistics Match: Népszínház Gunshot',
+      relationship: 'PROVES',
+      source: { type: 'evidence', id: 'ev_spent_shell_casing' },
+      target: { type: 'timeline', id: 'tl_03' },
+      requiredEvidenceIds: ['ev_spent_shell_casing'],
+      conclusion:
+        'The discharged 9mm cartridge confirms the single report heard at 22:45 was the fatal close-range shot.',
+      isKeyDeduction: true,
+    },
+    {
+      id: 'ded_danube_ledger_motive',
+      caseId: 'case_dev_danube',
+      title: 'Financial Dispute: Black Market Serial Numbers',
+      relationship: 'SUPPORTS',
+      source: { type: 'evidence', id: 'ev_pocket_watch_log' },
+      target: { type: 'evidence', id: 'ev_spent_shell_casing' },
+      requiredEvidenceIds: ['ev_pocket_watch_log', 'ev_spent_shell_casing'],
+      conclusion:
+        'Coded serial numbers inside the ransacked safe substantiate a fraudulent dispute that culminated in the shooting.',
+      isKeyDeduction: true,
+    },
+  ],
 });
 
 /**
