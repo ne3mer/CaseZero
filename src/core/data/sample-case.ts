@@ -175,6 +175,8 @@ export const SAMPLE_DEV_CASE: Case = CaseSchema.parse({
       requiredEvidenceIds: ['ev_spent_shell_casing'],
       conclusion:
         'The discharged 9mm cartridge confirms the single report heard at 22:45 was the fatal close-range shot.',
+      explanation:
+        'FLAGGED FOR REDESIGN: A physical shell casing cannot establish the exact time of a gunshot. Caliber corroboration only; marked for narrative redesign in Milestone 4.',
       isKeyDeduction: true,
     },
     {
@@ -187,6 +189,8 @@ export const SAMPLE_DEV_CASE: Case = CaseSchema.parse({
       requiredEvidenceIds: ['ev_pocket_watch_log', 'ev_spent_shell_casing'],
       conclusion:
         'Coded serial numbers inside the ransacked safe substantiate a fraudulent dispute that culminated in the shooting.',
+      explanation:
+        'FLAGGED FOR REDESIGN: An encrypted ledger and spent casing establish suspicion but cannot prove dispute causality without documentary or witness links. Marked for narrative redesign in Milestone 4.',
       isKeyDeduction: true,
     },
   ],

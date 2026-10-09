@@ -88,7 +88,10 @@ export function DeductionWorkspace({
         </View>
 
         {(slot1Entity || slot2Entity || selectedRelationship) && (
-          <Pressable onPress={onResetAll} style={styles.resetBtn}>
+          <Pressable
+            onPress={onResetAll}
+            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+            style={styles.resetBtn}>
             <Text style={styles.resetBtnText}>RESET</Text>
           </Pressable>
         )}

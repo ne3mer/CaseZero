@@ -2,7 +2,10 @@ import { describe, expect, it } from 'vitest';
 import { CASE_REGISTRY, getCaseById } from '../data/cases';
 import { MOCK_DEDUCTION_CASE } from '../data/fixtures/deduction-fixture';
 import { SAMPLE_DEV_CASE } from '../data/sample-case';
-import { evaluateDeductionAttempt } from '../logic/deduction-engine';
+import {
+  evaluateDeductionAttempt,
+  validateCaseDeductions,
+} from '../logic/deduction-engine';
 import { CaseDeduction, DeductionAttempt } from '../types/deduction';
 
 describe('Milestone 3B — Evidence Board & Deduction Gameplay Integration', () => {
@@ -266,6 +269,55 @@ describe('Milestone 3B — Evidence Board & Deduction Gameplay Integration', () 
       expect(result.status).toBe('VALID');
       expect(result.isSuccess).toBe(true);
       expect(result.deductionId).toBe('ded_ledger_supports_motive');
+    });
+  });
+
+  describe('10. Milestone 3C Audit & Case Deductions Integrity Validation', () => {
+    it('confirms SAMPLE_DEV_CASE structural validity via validateCaseDeductions', () => {
+      const validation = validateCaseDeductions(SAMPLE_DEV_CASE);
+      expect(validation.isValid).toBe(true);
+      expect(validation.errors).toHaveLength(0);
+    });
+
+    it('confirms both CZ-DEV-001 deductions contain explicit audit redesign explanations', () => {
+      const deductions = SAMPLE_DEV_CASE.deductions;
+      expect(deductions).toHaveLength(2);
+
+      const ballisticsDed = deductions.find(
+        (d) => d.id === 'ded_danube_ballistics_report'
+      );
+      expect(ballisticsDed).toBeDefined();
+      expect(ballisticsDed?.explanation).toContain('FLAGGED FOR REDESIGN');
+      expect(ballisticsDed?.explanation).toContain('shell casing cannot establish the exact time');
+
+      const ledgerDed = deductions.find(
+        (d) => d.id === 'ded_danube_ledger_motive'
+      );
+      expect(ledgerDed).toBeDefined();
+      expect(ledgerDed?.explanation).toContain('FLAGGED FOR REDESIGN');
+      expect(ledgerDed?.explanation).toContain('cannot prove dispute causality');
+    });
+
+    it('rejects deduction attempt when player inventory is completely empty', () => {
+      const attempt: DeductionAttempt = {
+        caseId: SAMPLE_DEV_CASE.id,
+        relationship: 'PROVES',
+        sourceId: 'ev_spent_shell_casing',
+        targetId: 'tl_03',
+        providedEvidenceIds: ['ev_spent_shell_casing'],
+      };
+
+      // Player possesses 0 evidence items (clean-slate / uncollected state)
+      const result = evaluateDeductionAttempt(
+        attempt,
+        SAMPLE_DEV_CASE.deductions,
+        [], // empty inventory
+        []
+      );
+
+      expect(result.status).toBe('MISSING_EVIDENCE');
+      expect(result.isSuccess).toBe(false);
+      expect(result.message).toContain('not been secured in your evidence locker');
     });
   });
 });

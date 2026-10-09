@@ -75,6 +75,7 @@ export function CrimeSceneCanvas({
         <View style={styles.lensToggleGroup}>
           <Pressable
             onPress={() => setIsLensActive((prev) => !prev)}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             style={({ pressed }) => [
               styles.lensButton,
               isLensActive ? styles.lensButtonActive : styles.lensButtonInactive,
@@ -105,6 +106,7 @@ export function CrimeSceneCanvas({
               <Pressable
                 key={level}
                 onPress={() => handleZoomChange(level)}
+                hitSlop={{ top: 12, bottom: 12, left: 8, right: 8 }}
                 style={({ pressed }) => [
                   styles.zoomButton,
                   isActive && styles.zoomButtonActive,

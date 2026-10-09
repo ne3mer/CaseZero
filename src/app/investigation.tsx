@@ -104,6 +104,7 @@ export default function InvestigationScreen() {
             <View style={styles.fastActionButtons}>
               <Pressable
                 onPress={() => router.push('/evidence-board')}
+                hitSlop={{ top: 12, bottom: 12, left: 8, right: 8 }}
                 style={({ pressed }) => [
                   styles.boardFastBtn,
                   pressed && styles.btnPressed,
@@ -115,6 +116,7 @@ export default function InvestigationScreen() {
 
               <Pressable
                 onPress={() => setIsInventoryOpen(true)}
+                hitSlop={{ top: 12, bottom: 12, left: 8, right: 8 }}
                 style={({ pressed }) => [
                   styles.inventoryFastBtn,
                   pressed && styles.btnPressed,
@@ -173,7 +175,9 @@ export default function InvestigationScreen() {
         <View style={styles.evidenceDrawerSection}>
           <View style={styles.drawerHeaderRow}>
             <Text style={styles.drawerTitle}>RECOVERED MATERIAL CLUES</Text>
-            <Pressable onPress={() => setIsInventoryOpen(true)}>
+            <Pressable
+              onPress={() => setIsInventoryOpen(true)}
+              hitSlop={{ top: 14, bottom: 14, left: 14, right: 14 }}>
               <Text style={styles.viewAllText}>VIEW FULL INVENTORY →</Text>
             </Pressable>
           </View>

@@ -266,7 +266,10 @@ export default function EvidenceBoardScreen() {
                 {feedback.message}
               </Text>
             </View>
-            <Pressable onPress={() => setFeedback(null)} style={styles.feedbackDismiss}>
+            <Pressable
+              onPress={() => setFeedback(null)}
+              hitSlop={{ top: 14, bottom: 14, left: 14, right: 14 }}
+              style={styles.feedbackDismiss}>
               <Text style={styles.feedbackDismissText}>✕</Text>
             </Pressable>
           </View>
@@ -328,6 +331,7 @@ export default function EvidenceBoardScreen() {
               <View style={styles.tabsRow}>
                 <Pressable
                   onPress={() => setActiveTab('evidence')}
+                  hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
                   style={[
                     styles.tabBtn,
                     activeTab === 'evidence' && styles.tabBtnActive,
@@ -343,6 +347,7 @@ export default function EvidenceBoardScreen() {
 
                 <Pressable
                   onPress={() => setActiveTab('timeline')}
+                  hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
                   style={[
                     styles.tabBtn,
                     activeTab === 'timeline' && styles.tabBtnActive,
@@ -358,6 +363,7 @@ export default function EvidenceBoardScreen() {
 
                 <Pressable
                   onPress={() => setActiveTab('suspects')}
+                  hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
                   style={[
                     styles.tabBtn,
                     activeTab === 'suspects' && styles.tabBtnActive,
@@ -553,7 +559,7 @@ const styles = StyleSheet.create({
   },
   tabBtn: {
     flex: 1,
-    paddingVertical: 7,
+    paddingVertical: 10,
     paddingHorizontal: 4,
     borderRadius: Radius.xs,
     backgroundColor: 'rgba(255, 255, 255, 0.03)',
@@ -561,6 +567,7 @@ const styles = StyleSheet.create({
     borderColor: NoirColors.borderSubtle,
     alignItems: 'center',
     justifyContent: 'center',
+    minHeight: 40,
   },
   tabBtnActive: {
     backgroundColor: 'rgba(197, 160, 89, 0.15)',
